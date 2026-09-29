@@ -1,0 +1,600 @@
+
+:root {
+  --school-ink: #29235f;
+  --school-indigo: #4f46e5;
+  --school-green: #b7e2d5;
+  --school-green-pale: #eff8f5;
+  --school-coral: #ff8a5b;
+  --text: #20263a;
+  --muted: #626b7c;
+  --line: #dce3e6;
+  font-family: 'Manrope', sans-serif;
+  color: var(--text);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 280px;
+  margin: 0;
+  background: #eef1f3;
+}
+
+button {
+  font: inherit;
+}
+
+.report-page {
+  width: min(100%, 920px);
+  margin: 0 auto;
+  padding: 24px 20px 48px;
+}
+
+.report-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.report-toolbar p {
+  margin: 0;
+}
+
+.toolbar-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+
+.action-button {
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid var(--school-ink);
+  border-radius: 4px;
+  background: var(--school-ink);
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.action-button-light {
+  background: #fff;
+  color: var(--school-ink);
+}
+
+.report-sheet {
+  width: 100%;
+  padding: clamp(20px, 4vw, 42px);
+  background: #fff;
+  box-shadow: 0 12px 38px rgba(28, 35, 55, 0.12);
+}
+
+.report-sheet[hidden] {
+  display: none;
+}
+
+.report-banner {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(220px, 0.8fr);
+  min-height: 116px;
+  align-items: center;
+  gap: 20px;
+  overflow: hidden;
+  padding: 22px 26px;
+  background: var(--school-ink);
+  color: white;
+}
+
+.banner-accent {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 7px;
+  background: var(--school-coral);
+}
+
+.school-brand {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 14px;
+}
+
+.school-brand img {
+  width: 68px;
+  height: 68px;
+  flex: 0 0 auto;
+  border-radius: 3px;
+  background: #fff;
+  object-fit: contain;
+}
+
+.school-brand h1 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(17px, 2.5vw, 23px);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.school-brand p {
+  margin: 5px 0 0;
+  color: #c8e9de;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.report-title {
+  padding-left: 18px;
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+  text-align: right;
+}
+
+.report-title h2 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(19px, 3vw, 28px);
+  font-weight: 800;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.report-title p {
+  margin: 6px 0 0;
+  color: #c8e9de;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.student-profile {
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  align-items: center;
+  gap: 20px;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.portrait-frame {
+  position: relative;
+  width: 100px;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--school-green-pale);
+  box-shadow: 0 0 0 4px #fff, 0 0 0 5px var(--line);
+}
+
+.portrait-frame img {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+}
+
+.portrait-frame img[hidden] {
+  display: none;
+}
+
+.portrait-frame span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--school-ink);
+  font-size: 27px;
+  font-weight: 800;
+}
+
+.profile-fields {
+  min-width: 0;
+}
+
+.profile-primary {
+  display: flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  background: #f4f5f5;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.profile-primary strong,
+.profile-grid strong {
+  color: #111827;
+  font-weight: 800;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 7px;
+}
+
+.profile-grid p {
+  min-width: 0;
+  margin: 0;
+  padding: 8px 10px;
+  background: #f4f5f5;
+  font-size: 11px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.report-meta {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 18px 0 20px;
+}
+
+.report-meta > div {
+  min-width: 0;
+  padding: 10px 12px;
+  border-left: 3px solid var(--school-green);
+  background: #f5f7f6;
+}
+
+.report-meta span,
+.report-meta strong {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.report-meta span {
+  margin-bottom: 3px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.report-meta strong {
+  color: var(--school-ink);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.section-heading {
+  display: flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  background: var(--school-green-pale);
+  border-bottom: 1px solid var(--school-green);
+}
+
+.section-heading h2 {
+  margin: 0;
+  color: var(--school-ink);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.section-heading span {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+th,
+td {
+  padding: 8px 9px;
+  border-bottom: 1px solid #e4e9e5;
+  text-align: left;
+}
+
+th {
+  background: #f2f4f3;
+  color: #20263a;
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+th:not(:first-child):not(:last-child),
+td:not(:first-child):not(:last-child) {
+  text-align: center;
+}
+
+tbody tr:nth-child(even) {
+  background: #fbfcfb;
+}
+
+td:first-child {
+  min-width: 135px;
+  font-weight: 600;
+}
+
+td.grade-cell {
+  color: var(--school-ink);
+  font-weight: 800;
+}
+
+.achievement-row {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1fr;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 12px;
+  background: var(--school-ink);
+  color: #fff;
+}
+
+.achievement-row > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 7px;
+}
+
+.achievement-row > div + div {
+  border-left: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.achievement-row span {
+  color: #c8e9de;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.achievement-row strong {
+  color: white;
+  font-size: 15px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.remarks-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.remark-box {
+  min-height: 78px;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--school-green);
+}
+
+.remark-box h2 {
+  margin: 0 0 7px;
+  color: var(--school-ink);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.remark-box p {
+  margin: 0;
+  color: #424a58;
+  font-size: 11px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.grade-key {
+  margin-top: 14px;
+  border-bottom: 2px solid var(--school-green);
+}
+
+.grade-key h2 {
+  margin: 0;
+  padding: 8px;
+  background: #f2f4f3;
+  color: var(--school-ink);
+  font-size: 10px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.grade-key p {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  gap: 6px 14px;
+  margin: 0;
+  padding: 9px 4px;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.grade-key strong {
+  color: var(--school-ink);
+}
+
+.report-footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  margin-top: 28px;
+  padding-top: 5px;
+}
+
+.signature-line {
+  padding-top: 20px;
+  border-top: 1px solid #8d9299;
+  color: var(--muted);
+  font-size: 9px;
+  text-align: center;
+}
+
+.report-footer > p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--muted);
+  font-size: 9px;
+  text-align: center;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 620px) {
+  .report-page {
+    padding: 14px 10px 28px;
+  }
+
+  .report-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .report-sheet {
+    padding: 16px 12px;
+  }
+
+  .report-banner {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 24px 16px 16px;
+  }
+
+  .school-brand img {
+    width: 54px;
+    height: 54px;
+  }
+
+  .report-title {
+    padding: 0;
+    border: 0;
+    text-align: left;
+  }
+
+  .student-profile {
+    grid-template-columns: 74px minmax(0, 1fr);
+    gap: 13px;
+    padding: 18px 0;
+  }
+
+  .portrait-frame {
+    width: 68px;
+  }
+
+  .profile-primary {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 11px;
+  }
+
+  .profile-grid {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .profile-grid p {
+    padding: 6px 8px;
+    font-size: 10px;
+  }
+
+  .report-meta {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .achievement-row {
+    grid-template-columns: 1fr;
+  }
+
+  .achievement-row > div + div {
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
+    border-left: 0;
+  }
+
+  .remarks-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@page {
+  size: A4 portrait;
+  margin: 12mm;
+}
+
+@media print {
+  body {
+    min-width: 0;
+    background: #fff;
+  }
+
+  .report-page {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .report-toolbar {
+    display: none;
+  }
+
+  .report-sheet {
+    padding: 0;
+    box-shadow: none;
+  }
+
+  .report-banner,
+  .achievement-row {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .table-scroll {
+    overflow: visible;
+  }
+
+  table {
+    font-size: 9px;
+  }
+
+  th,
+  td {
+    padding: 6px;
+  }
+
+  tr,
+  .remarks-grid,
+  .achievement-row,
+  .report-meta {
+    break-inside: avoid;
+  }
+}

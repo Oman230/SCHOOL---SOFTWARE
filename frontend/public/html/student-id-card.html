@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#29235f" />
+  <title>Student ID Card | Sunrise International School</title>
+  <link rel="stylesheet" href="/css/student-id-card.css" />
+</head>
+<body>
+  <main class="card-page">
+    <div class="card-toolbar" aria-label="Card actions">
+      <span id="card-status" role="status">Preparing student ID card...</span>
+      <div>
+        <button class="toolbar-button" type="button" onclick="window.print()" aria-label="Print student ID card">Print card</button>
+        <button class="toolbar-button toolbar-button-quiet" type="button" onclick="window.close()" aria-label="Close student ID card">Close</button>
+      </div>
+    </div>
+
+    <article class="student-id-card" aria-label="Student identification card">
+      <div class="card-header-pattern" aria-hidden="true"></div>
+      <header class="school-brand">
+        <img id="school-logo" src="/assets/logo.png" alt="Sunrise International School logo" />
+        <div class="school-name"><strong>Sunrise</strong><span>International School</span></div>
+      </header>
+
+      <section class="card-information">
+        <div class="student-portrait-wrap">
+          <img id="student-photo" class="student-portrait" alt="Student portrait" hidden />
+          <span id="photo-initials" class="photo-initials" aria-hidden="true">SI</span>
+        </div>
+
+        <div class="student-information">
+          <h1 id="student-name">Student Name</h1>
+          <p class="student-role">Student</p>
+          <p id="student-class" class="student-class"></p>
+          <p class="student-id-line"><span>Student ID:</span> <strong id="student-number">-</strong></p>
+        </div>
+      </section>
+      <div class="card-accent" aria-hidden="true"></div>
+    </article>
+  </main>
+  <script src="/js/student-id-card.js"></script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#29235f" />
+  <title>Assignment | Sunrise International School</title>
+  <link rel="stylesheet" href="/css/student-assignment-print.css" />
+</head>
+<body>
+  <main class="print-page">
+    <div class="print-toolbar">
+      <p id="print-status" role="status">Preparing assignment...</p>
+      <div>
+        <button class="print-button" type="button" onclick="window.print()">Print / Save PDF</button>
+        <button class="close-button" type="button" onclick="window.close()">Close</button>
+      </div>
+    </div>
+
+    <article class="assignment-sheet" id="assignment-sheet" hidden>
+      <header class="school-header">
+        <div class="school-brand">
+          <img id="school-logo" src="/assets/logo.png" alt="Sunrise International School logo" />
+          <div><h1>Sunrise International School</h1><p>Class Assignment</p></div>
+        </div>
+        <div class="header-rule" aria-hidden="true"></div>
+      </header>
+
+      <section class="assignment-heading">
+        <p class="document-label">Student Assignment</p>
+        <h2 id="assignment-title">Assignment</h2>
+        <div class="assignment-metadata">
+          <p><strong>Teacher</strong><span id="assignment-teacher">-</span></p>
+          <p><strong>Posted</strong><span id="assignment-posted">-</span></p>
+          <p><strong>Due date</strong><span id="assignment-due">-</span></p>
+        </div>
+      </section>
+
+      <section class="instructions-section">
+        <h3>Instructions</h3>
+        <div id="assignment-content" class="assignment-content"></div>
+      </section>
+
+      <section id="assignment-files-section" class="files-section" hidden>
+        <h3>Attached resources</h3>
+        <div id="assignment-files" class="assignment-files"></div>
+      </section>
+
+      <footer class="assignment-footer">Sunrise International School | Student learning resource</footer>
+    </article>
+  </main>
+  <script src="/js/student-assignment-print.js"></script>
+</body>
+</html>

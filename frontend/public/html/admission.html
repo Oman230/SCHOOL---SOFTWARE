@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admissions | Sunrise International School</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="admission-page">
+  <header class="admission-header">
+    <a class="admission-school-brand" href="/index.html">
+      <img src="/assets/logo.png" alt="Sunrise International School logo" onerror="this.style.display='none';" />
+      <span><strong>Sunrise International School</strong><small>Admissions Office</small></span>
+    </a>
+    <a href="/index.html" class="btn btn-outline">Back to home</a>
+  </header>
+
+  <main class="admission-shell">
+    <section class="admission-intro">
+      <span class="hero-badge">2026 / 2027 admissions</span>
+      <h1>Begin your child’s journey with us.</h1>
+      <p>Complete this application with accurate family and learner information. Our admissions team will review your submission and contact you using the details provided.</p>
+      <div class="admission-contact-strip">
+        <span>123 Independence Avenue, Accra, Ghana</span>
+        <span>+233 20 000 0000</span>
+        <span>admissions@sunrise-school.edu.gh</span>
+      </div>
+    </section>
+
+    <form id="admission-form" class="admission-form" novalidate>
+      <div class="admission-form-heading"><span>01</span><div><small>Learner profile</small><h2>Student details</h2></div></div>
+      <div class="admission-form-grid">
+        <div class="form-group full-width"><label for="studentFullName">Student full name *</label><input id="studentFullName" name="studentFullName" required /></div>
+        <div class="form-group"><label for="dateOfBirth">Date of birth</label><input id="dateOfBirth" name="dateOfBirth" type="date" /></div>
+        <div class="form-group"><label for="gender">Gender</label><select id="gender" name="gender"><option value="">Select gender</option><option>Female</option><option>Male</option><option>Prefer not to say</option></select></div>
+        <div class="form-group"><label for="applyingForLevel">Applying for level *</label><select id="applyingForLevel" name="applyingForLevel" required><option value="">Select level</option><option>Creche</option><option>Kindergarten</option><option>Primary</option><option>Junior High School</option></select></div>
+        <div class="form-group"><label for="previousSchool">Previous school</label><input id="previousSchool" name="previousSchool" /></div>
+      </div>
+
+      <div class="admission-form-heading"><span>02</span><div><small>Family information</small><h2>Parent or guardian</h2></div></div>
+      <div class="admission-form-grid">
+        <div class="form-group"><label for="parentName">Parent / guardian name *</label><input id="parentName" name="parentName" required /></div>
+        <div class="form-group"><label for="parentPhone">Telephone *</label><input id="parentPhone" name="parentPhone" type="tel" required /></div>
+        <div class="form-group"><label for="parentEmail">Email address *</label><input id="parentEmail" name="parentEmail" type="email" required /></div>
+        <div class="form-group full-width"><label for="homeAddress">Residential address</label><textarea id="homeAddress" name="homeAddress" rows="3"></textarea></div>
+      </div>
+
+      <div class="admission-form-heading"><span>03</span><div><small>Care information</small><h2>Additional notes</h2></div></div>
+      <div class="admission-form-grid">
+        <div class="form-group full-width"><label for="medicalNotes">Medical, learning, or support notes</label><textarea id="medicalNotes" name="medicalNotes" rows="4" placeholder="Share anything the school should know to support the learner."></textarea></div>
+      </div>
+
+      <div class="admission-declaration">
+        <label class="admission-check"><input id="declarationAccepted" type="checkbox" required /><span>I declare that the information supplied in this application is true and complete. I understand that the school may request supporting documents before admission is confirmed.</span></label>
+        <div class="admission-signature-row"><div class="form-group"><label for="parentSignature">Parent / guardian signature *</label><input id="parentSignature" name="parentSignature" placeholder="Type your full name as signature" required /></div><div class="form-group"><label>Application date</label><input value="Automatically recorded" disabled /></div></div>
+      </div>
+
+      <div class="admission-submit-row"><p id="admission-status" role="status"></p><button type="submit" class="btn btn-primary">Submit admission application</button></div>
+    </form>
+  </main>
+
+  <script src="/js/admission.js"></script>
+</body>
+</html>

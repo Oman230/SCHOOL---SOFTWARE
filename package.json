@@ -2,23 +2,63 @@
   "name": "school-management-system",
   "version": "1.0.0",
   "description": "A school management system with student/teacher dashboards, terminal reports, and Paystack fee payment",
-  "main": "server.js",
+  "main": "electron/main.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
-    "setup-db": "node database/setup.js"
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
+    "test": "node --test backend/tests/*.test.js",
+    "setup-db": "node backend/database/setup.js",
+    "seed": "node backend/database/seed.js",
+    "test:webhook": "node backend/test-paystack-webhook.js",
+    "desktop": "electron .",
+    "dist:mac": "electron-builder --mac dmg zip",
+    "dist:mac:arm64": "electron-builder --mac dmg zip --arm64",
+    "dist:win": "electron-builder --win nsis",
+    "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
-    "express": "^4.19.2",
-    "pg": "^8.12.0",
-    "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2",
-    "dotenv": "^16.4.5",
-    "cors": "^2.8.5",
     "axios": "^1.7.7",
-    "pdfkit": "^0.15.0"
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^13.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^10.0.10",
+    "pdfkit": "^0.15.0",
+    "sanitize-html": "^2.17.7"
   },
   "devDependencies": {
+    "electron": "^44.4.5",
+    "electron-builder": "^26.15.3",
     "nodemon": "^3.1.4"
+  },
+  "build": {
+    "appId": "com.sunrise.schoolmanagement",
+    "productName": "School Management System",
+    "npmRebuild": false,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "backend/**/*",
+      "frontend/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "frontend/assets/icon.icons"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "frontend/assets/icon.icons"
+    }
   }
 }

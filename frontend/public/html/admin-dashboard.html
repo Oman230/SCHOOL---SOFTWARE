@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+  <div class="dashboard">
+    <aside class="sidebar">
+      <div class="brand">🛠️ Admin Portal</div>
+      <a href="#" class="active">Overview</a>
+      <a href="#classrooms-section">Classrooms</a>
+      <a href="#teachers-section">Teachers</a>
+      <a href="#students-section">Students</a>
+      <a href="#admissions-section">New Admissions</a>
+      <a href="#" id="logout-link">Logout</a>
+    </aside>
+
+    <main class="main-content">
+      <h2 id="welcome-heading">Welcome!</h2>
+      <p>Manage classrooms, teachers, and students for the whole school here.</p>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="label">Total Students</div>
+          <div class="value" id="stat-students">-</div>
+        </div>
+        <div class="stat-box">
+          <div class="label">Total Teachers</div>
+          <div class="value" id="stat-teachers">-</div>
+        </div>
+        <div class="stat-box">
+          <div class="label">Total Classrooms</div>
+          <div class="value" id="stat-classrooms">-</div>
+        </div>
+        <div class="stat-box">
+          <div class="label">Fees Collected (GHS)</div>
+          <div class="value" id="stat-fees">-</div>
+        </div>
+      </div>
+
+      <div class="card mini-overview-panel">
+        <div class="section-head">
+          <div class="title-wrap">
+            <span class="eyebrow">Momentum</span>
+            <h3>Student Progress Snapshot</h3>
+          </div>
+          <span class="status-pill">At a glance</span>
+        </div>
+        <div id="admin-momentum-panel" class="mini-momentum-grid"></div>
+      </div>
+
+      <div class="card" id="school-fees-section">
+        <div class="section-head">
+          <div class="title-wrap">
+            <span class="eyebrow">Billing</span>
+            <h3>School Fees by Level &amp; Term</h3>
+          </div>
+          <span class="status-pill">Term fees</span>
+        </div>
+
+        <form id="school-fee-form" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:20px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="schoolFeeLevel">School level</label>
+            <select id="schoolFeeLevel" required>
+              <option value="Creche">Creche</option>
+              <option value="Kindergarten">Kindergarten</option>
+              <option value="Primary">Primary</option>
+              <option value="JHS">JHS</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="schoolFeeTerm">Term</label>
+            <select id="schoolFeeTerm" required>
+              <option value="First Term">First Term</option>
+              <option value="Second Term">Second Term</option>
+              <option value="Third Term">Third Term</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="schoolFeeAmount">Fee amount (GHS)</label>
+            <input type="number" id="schoolFeeAmount" min="0" step="0.01" placeholder="2500.00" required />
+          </div>
+
+          <div class="form-group" style="margin-bottom:0; display:flex; align-items:end;">
+            <button type="submit" class="btn btn-primary" style="width:100%;">Save Fee</button>
+          </div>
+        </form>
+
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>School Level</th><th>Term</th><th>Fee (GHS)</th><th>Updated</th></tr></thead>
+            <tbody id="school-fees-table-body"><tr><td colspan="4">Loading school fees...</td></tr></tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <div class="card" id="search-section">
+        <div class="section-head">
+          <div class="title-wrap">
+            <span class="eyebrow">Search</span>
+            <h3>Find Students</h3>
+          </div>
+          <span class="status-pill">Live</span>
+        </div>
+
+        <div class="form-group" style="max-width:420px; margin-bottom:0;">
+          <label for="admin-student-search">Search by student name</label>
+          <input type="text" id="admin-student-search" placeholder="Type a student name..." />
+        </div>
+        <div class="table-scroll" style="margin-top:18px;">
+          <table>
+            <thead><tr><th>ID</th><th>Full Name</th><th>Classroom</th><th>Fees Due</th><th>Paid</th><th>Trend</th></tr></thead>
+            <tbody id="student-search-results"><tr><td colspan="6">Start typing to search students.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" id="classrooms-section">
+        <div class="section-head">
+          <div class="title-wrap">
+            <span class="eyebrow">Operations</span>
+            <h3>Classrooms</h3>
+          </div>
+          <span class="status-pill">Active</span>
+        </div>
+
+        <form id="classroom-form" style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px;">
+          <div class="form-group" style="flex:1; min-width:180px; margin-bottom:0;">
+            <input type="text" id="classroomName" placeholder="Class name (e.g. JHS 2B)" required />
+          </div>
+          <div class="form-group" style="flex:1; min-width:220px; margin-bottom:0;">
+            <input type="text" id="classroomLevel" placeholder="Level (e.g. Junior High School 2)" required />
+          </div>
+          <button type="submit" class="btn btn-primary">Add Classroom</button>
+        </form>
+
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Name</th><th>Level</th><th>Action</th></tr></thead>
+            <tbody id="classrooms-table-body"><tr><td colspan="3">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" id="teachers-section">
+        <div class="section-head">
+          <div class="title-wrap">
+            <span class="eyebrow">People</span>
+            <h3>Teachers</h3>
+          </div>
+          <span class="status-pill">Verified</span>
+        </div>
+
+        <form id="teacher-form" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:20px;">
+          <input type="text" id="teacherFullName" placeholder="Full name" required />
+          <input type="email" id="teacherEmail" placeholder="Email" required />
+          <input type="text" id="teacherPassword" placeholder="Set a password" required />
+          <input type="text" id="teacherPhone" placeholder="Phone (optional)" />
+          <select id="teacherClassroom" style="padding:14px 16px; border-radius:14px; border:1px solid rgba(79,70,229,0.08); background: rgba(255,255,255,0.9);">
+            <option value="">Assign classroom (optional)</option>
+          </select>
+          <button type="submit" class="btn btn-primary">Add Teacher</button>
+        </form>
+
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Full Name</th><th>Email</th><th>Classroom</th><th>Action</th></tr></thead>
+            <tbody id="teachers-table-body"><tr><td colspan="4">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" id="students-section">
+        <div class="section-head">
+          <div class="title-wrap">
+            <span class="eyebrow">Cohort</span>
+            <h3>Students</h3>
+          </div>
+          <span class="status-pill">Synced</span>
+        </div>
+
+        <form id="student-form" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:20px;">
+          <input type="text" id="studentIdNumber" placeholder="Student ID (e.g. SIS-2026-002)" required />
+          <input type="text" id="studentFullName" placeholder="Full name" required />
+          <input type="email" id="studentEmail" placeholder="Email (optional)" />
+          <input type="text" id="studentParentName" placeholder="Parent / guardian name" />
+          <input type="email" id="studentParentEmail" placeholder="Parent / guardian email" />
+          <input type="tel" id="studentParentPhone" placeholder="Parent / guardian telephone" />
+          <input type="text" id="studentPassword" placeholder="Set a password" required />
+          <select id="studentGender" style="padding:14px 16px; border-radius:14px; border:1px solid rgba(79,70,229,0.08); background: rgba(255,255,255,0.9);">
+            <option value="">Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+          <select id="studentClassroom" style="padding:14px 16px; border-radius:14px; border:1px solid rgba(79,70,229,0.08); background: rgba(255,255,255,0.9);">
+            <option value="">Assign classroom</option>
+          </select>
+          <input type="number" id="studentFeesDue" placeholder="Total fees due (GHS)" min="0" step="0.01" />
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <label for="studentPhoto" style="font-size:0.8rem; font-weight:800; color:var(--color-primary-strong);">Profile photo (optional)</label>
+            <input type="file" id="studentPhoto" accept="image/*" />
+          </div>
+          <button type="submit" class="btn btn-primary">Add Student</button>
+        </form>
+
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>ID</th><th>Full Name</th><th>Classroom</th><th>Fees Due</th><th>Paid</th><th>Trend</th><th>Action</th></tr></thead>
+            <tbody id="students-table-body"><tr><td colspan="7">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" id="admissions-section">
+        <div class="section-head">
+          <div class="title-wrap">
+            <span class="eyebrow">Admissions Office</span>
+            <h3>New Admission Applications</h3>
+          </div>
+          <span class="status-pill">Review queue</span>
+        </div>
+        <p class="admission-admin-note">Review each submitted form, update its status, or open the official PDF for printing and signatures.</p>
+        <div class="admission-search-wrap">
+          <label for="admission-search">Search applications</label>
+          <input type="search" id="admission-search" placeholder="Application number, student, parent, phone, or email" autocomplete="off" />
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Application</th><th>Student</th><th>Applying for</th><th>Parent / guardian</th><th>Submitted</th><th>Status</th><th>Document</th><th>Action</th></tr></thead>
+            <tbody id="admissions-table-body"><tr><td colspan="8">Loading admission applications...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" id="announcements-section">
+        <div class="section-head">
+          <div class="title-wrap">
+            <span class="eyebrow">Communication</span>
+            <h3>Daily Announcements</h3>
+          </div>
+          <span class="status-pill">Visible</span>
+        </div>
+
+        <form id="announcement-form" style="display:grid; grid-template-columns:1fr; gap:12px; margin-bottom:20px;">
+          <input type="text" id="announcementTitle" placeholder="Announcement title" maxlength="150" required />
+          <textarea id="announcementMessage" rows="4" placeholder="Write the school activity news or reminder for parents..." required></textarea>
+          <button type="submit" class="btn btn-primary" style="width:fit-content;">Publish Announcement</button>
+        </form>
+
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Title</th><th>Message</th><th>Date</th><th>Action</th></tr></thead>
+            <tbody id="announcements-table-body"><tr><td colspan="4">Loading...</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="parent-email-composer">
+          <div class="parent-email-composer-heading">
+            <div><span class="eyebrow">Email Parents</span><h4>Send a bulk notice</h4></div>
+            <span>All parent emails saved in student records</span>
+          </div>
+          <form id="admin-parent-email-form" class="parent-email-form">
+            <input type="text" id="admin-parent-email-subject" placeholder="Subject" maxlength="160" required />
+            <textarea id="admin-parent-email-message" rows="4" maxlength="5000" placeholder="Write a reminder, notice, or important update..." required></textarea>
+            <div class="parent-email-form-footer"><p id="admin-parent-email-status" role="status"></p><button type="submit" class="btn btn-accent">Send to all parents</button></div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card" id="subjects-section">
+        <div class="section-head">
+          <div class="title-wrap">
+            <span class="eyebrow">Curriculum</span>
+            <h3>Subjects</h3>
+          </div>
+          <span class="status-pill">Editable</span>
+        </div>
+
+        <form id="subject-form" style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px;">
+          <div class="form-group" style="flex:1; min-width:220px; margin-bottom:0;">
+            <input type="text" id="subjectName" placeholder="Subject name" required />
+          </div>
+          <button type="submit" class="btn btn-primary">Add Subject</button>
+        </form>
+
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Subject</th><th>Action</th></tr></thead>
+            <tbody id="subjects-table-body"><tr><td colspan="2">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="/js/admin.js"></script>
+</body>
+</html>

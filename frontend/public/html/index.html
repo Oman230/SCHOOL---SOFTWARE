@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Basic page setup -->
+  <meta charset="UTF-8" />
+  <!-- Makes the page render correctly and scale properly on phones/tablets -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sunrise International School — School Management System</title>
+  <!-- Link to our shared stylesheet -->
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+  <!-- ===================== NAVIGATION BAR ===================== -->
+  <header class="navbar">
+    <div class="logo">
+      <!-- Replace this circle with an <img src="/img/logo.png"> once you have a real school logo -->
+      <div class="logo-circle">SIS</div>
+      Sunrise International School
+    </div>
+    <nav>
+      <a href="/index.html">Home</a>
+      <a href="#features">Features</a>
+      <a href="#about">About</a>
+      <a href="/login.html" class="btn btn-primary">Login</a>
+    </nav>
+  </header>
+
+  <!-- ===================== HERO SECTION ===================== -->
+  <section class="hero">
+    <!-- Left side: headline + call-to-action buttons -->
+    <div class="hero-text">
+      <div class="hero-badge">Private academy platform</div>
+      <h1>Excellence, structure, and belonging in one exceptional school experience.</h1>
+      <p>
+        Sunrise International School brings together academic excellence, secure fee management, and seamless family communication in a refined digital environment designed for aspirational learning.
+      </p>
+      <div class="hero-buttons">
+        <a href="/login.html" class="btn btn-accent">Enter Portal</a>
+        <a href="/admission.html" class="btn btn-primary">New Admission</a>
+        <a href="#features" class="btn btn-outline">Discover More</a>
+      </div>
+
+      <div class="hero-stats" aria-label="school performance metrics">
+        <div class="hero-stat-card">
+          <span class="value" data-target="96" data-suffix="%">0</span>
+          <span class="label">Engagement</span>
+        </div>
+        <div class="hero-stat-card">
+          <span class="value" data-target="12" data-suffix="k+">0</span>
+          <span class="label">Records</span>
+        </div>
+        <div class="hero-stat-card">
+          <span class="value" data-target="4.9" data-suffix="/5">0</span>
+          <span class="label">Experience</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- The local school logo keeps this page complete when the app is offline. -->
+    <div class="hero-image">
+      <img
+        src="/assets/logo.png"
+        alt="Sunrise International School logo"
+      />
+    </div>
+  </section>
+
+  <section class="section" id="announcements">
+    <h2 class="section-title">School announcements</h2>
+    <p class="section-subtitle">
+      Daily updates from the school community, including activities, events, and important reminders for families.
+    </p>
+    <div id="announcement-list" class="announcement-list" aria-live="polite"></div>
+  </section>
+
+  <!-- ===================== FEATURES SECTION ===================== -->
+  <section class="section" id="features">
+    <h2 class="section-title">A world-class campus experience, beautifully managed.</h2>
+    <p class="section-subtitle">
+      Created for students, teachers, and families who expect purposeful systems, polished communication, and premium daily operations.
+    </p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="icon">🎓</div>
+        <h3>Student Experience</h3>
+        <p>Access class updates, academic records, and personal milestones in a refined, student-first experience.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">📊</div>
+        <h3>Academic Insight</h3>
+        <p>Monitor performance, document growth, and produce terminal reports with clarity and professional precision.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">💳</div>
+        <h3>Premium Finance</h3>
+        <p>Handle fee payments securely and transparently with a process designed for confidence and efficiency.</p>
+      </div>
+      <div class="feature-card">
+        <div class="icon">👩‍🏫</div>
+        <h3>Teacher Enablement</h3>
+        <p>Support every educator with intuitive tools that simplify lesson tracking, reporting, and classroom oversight.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== TEACHERS SHOWCASE ===================== -->
+  <section class="section teacher-section" id="teachers">
+    <h2 class="section-title">Meet the educators guiding every learner forward.</h2>
+    <p class="section-subtitle">
+      Our faculty brings international standards, deep care, and a strong academic ethos to every classroom — empowering students to learn with confidence, curiosity, and ambition.
+    </p>
+    <div id="teacher-cards" class="teacher-grid" aria-live="polite"></div>
+  </section>
+
+  <!-- ===================== ABOUT / CONTACT SECTION ===================== -->
+  <section class="section" id="about" style="background:#fff;">
+    <h2 class="section-title">A learning community built on excellence and aspiration.</h2>
+    <p class="section-subtitle">
+      Sunrise International School offers a values-driven, academically ambitious environment where students are encouraged to excel, lead, and grow with confidence in a globally minded setting.
+      <br /><br />
+      Address: 123 Independence Avenue, Accra, Ghana &nbsp;|&nbsp; Tel: +233 20 000 0000
+    </p>
+  </section>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer>
+    &copy; <span id="year"></span> Sunrise International School. All rights reserved.
+  </footer>
+
+  <a
+    class="whatsapp-contact"
+    id="whatsapp-contact"
+    href="https://wa.me/233557801521?text=Hello%2C%20I%20have%20an%20enquiry%20for%20Sunrise%20International%20School."
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="Chat with the school administrator on WhatsApp"
+    title="Chat with the school administrator"
+  >
+    <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+      <path d="M16.03 3.2A12.56 12.56 0 0 0 5.26 22.24L3.5 28.7l6.62-1.73A12.58 12.58 0 1 0 16.03 3.2Zm0 22.93c-1.9 0-3.77-.51-5.4-1.49l-.39-.23-3.93 1.03 1.05-3.83-.25-.4a10.3 10.3 0 1 1 8.92 4.92Zm5.66-7.72c-.31-.16-1.84-.91-2.12-1.02-.29-.1-.5-.16-.71.16-.21.31-.81 1.02-.99 1.23-.18.21-.36.23-.67.08-.31-.16-1.31-.49-2.49-1.55-.92-.82-1.55-1.84-1.73-2.15-.18-.31-.02-.48.14-.64.14-.14.31-.36.47-.54.15-.18.2-.31.31-.52.1-.2.05-.39-.03-.54-.08-.16-.71-1.7-.98-2.33-.26-.61-.52-.52-.71-.53h-.6c-.2 0-.54.08-.82.39-.28.31-1.08 1.05-1.08 2.57s1.1 2.98 1.25 3.19c.15.21 2.17 3.31 5.25 4.64.73.31 1.3.5 1.74.64.73.23 1.4.2 1.93.12.59-.09 1.84-.75 2.1-1.48.26-.73.26-1.36.18-1.49-.08-.13-.28-.21-.59-.36Z" fill="currentColor" />
+    </svg>
+  </a>
+
+  <script src="/config.js"></script>
+  <script>
+    // Small script to automatically show the current year in the footer
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    const whatsappNumber = String(window.ADMIN_WHATSAPP_NUMBER || '233557801521').replace(/\D/g, '');
+    document.getElementById('whatsapp-contact').href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent('Hello, I have an enquiry for Sunrise International School.')}`;
+
+    async function loadTeacherCards() {
+      const container = document.getElementById('teacher-cards');
+
+      try {
+        const response = await fetch('/api/teachers/public');
+        if (!response.ok) throw new Error('Failed to load teachers');
+
+        const teachers = await response.json();
+
+        if (!teachers.length) {
+          container.innerHTML = '<p class="empty-state">No teachers have joined the portal yet.</p>';
+          return;
+        }
+
+        container.innerHTML = teachers.map((teacher) => `
+          <article class="teacher-card">
+            <div class="teacher-avatar">
+              <img src="${teacher.photo_url || '/assets/logo.png'}" alt="${teacher.name} portrait" />
+            </div>
+            <h3>${teacher.name}</h3>
+            <p class="teacher-classroom">${teacher.classroom}</p>
+            <div class="teacher-subjects">
+              ${teacher.subjects.map((subject) => `<span>${subject}</span>`).join('')}
+            </div>
+          </article>
+        `).join('');
+      } catch (error) {
+        console.error(error);
+        container.innerHTML = '<p class="empty-state">Teachers are not available right now.</p>';
+      }
+    }
+
+    function animateCounter(element) {
+      const target = Number(element.dataset.target || 0);
+      const suffix = element.dataset.suffix || '';
+      const duration = 1400;
+      const startTime = performance.now();
+
+      function tick(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const value = target * eased;
+
+        if (target % 1 !== 0) {
+          element.textContent = value.toFixed(1) + suffix;
+        } else {
+          element.textContent = Math.round(value) + suffix;
+        }
+
+        if (progress < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          element.textContent = target.toFixed(target % 1 !== 0 ? 1 : 0) + suffix;
+        }
+      }
+
+      requestAnimationFrame(tick);
+    }
+
+    async function loadAnnouncements() {
+      const container = document.getElementById('announcement-list');
+
+      try {
+        const response = await fetch('/api/announcements/public');
+        if (!response.ok) throw new Error('Failed to load announcements');
+
+        const announcements = await response.json();
+
+        if (!announcements.length) {
+          container.innerHTML = '<p class="empty-state">No school announcements yet. Check back soon.</p>';
+          return;
+        }
+
+        const sortedAnnouncements = [...announcements].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+        container.innerHTML = sortedAnnouncements.map((announcement) => `
+          <article class="announcement-item">
+            <div class="announcement-meta">
+              <span>School notice</span>
+              <span>${new Date(announcement.created_at).toLocaleString([], { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</span>
+            </div>
+            <h3>${announcement.title}</h3>
+            <p>${announcement.message}</p>
+          </article>
+        `).join('');
+      } catch (error) {
+        console.error(error);
+        container.innerHTML = '<p class="empty-state">Announcements are not available right now.</p>';
+      }
+    }
+
+    document.querySelectorAll('[data-target]').forEach(animateCounter);
+    loadTeacherCards();
+    loadAnnouncements();
+  </script>
+</body>
+</html>

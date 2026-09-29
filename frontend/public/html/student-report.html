@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#29235f" />
+  <title>Student Terminal Report | Sunrise International School</title>
+  <link rel="stylesheet" href="/css/student-report.css" />
+</head>
+<body>
+  <main class="report-page">
+    <div class="report-toolbar">
+      <p id="report-status" role="status">Loading report...</p>
+      <div class="toolbar-actions">
+        <button class="action-button" type="button" onclick="window.print()" aria-label="Print or save report as PDF">Print / Save PDF</button>
+        <button class="action-button action-button-light" type="button" onclick="window.close()">Close</button>
+      </div>
+    </div>
+
+    <article class="report-sheet" id="report-sheet" aria-label="Student terminal report" hidden>
+      <header class="report-banner">
+        <span class="banner-accent" aria-hidden="true"></span>
+        <div class="school-brand">
+          <img id="school-logo" src="/assets/logo.png" alt="Sunrise International School logo" />
+          <div>
+            <h1 id="school-name">Sunrise International School</h1>
+            <p>Student Academic Record</p>
+          </div>
+        </div>
+        <div class="report-title">
+          <h2>Terminal Report</h2>
+          <p id="report-period">Academic Year</p>
+        </div>
+      </header>
+
+      <section class="student-profile" aria-labelledby="student-profile-title">
+        <div class="portrait-frame">
+          <img id="student-photo" alt="Student portrait" hidden />
+          <span id="student-initials" aria-hidden="true">ST</span>
+        </div>
+        <div class="profile-fields">
+          <h2 id="student-profile-title" class="visually-hidden">Student details</h2>
+          <div class="profile-primary"><strong>Student Name:</strong><span id="student-name">-</span></div>
+          <div class="profile-grid">
+            <p><strong>Student ID:</strong> <span id="student-id">-</span></p>
+            <p><strong>Date of Birth:</strong> <span id="student-birthday">-</span></p>
+            <p><strong>Class:</strong> <span id="student-class">-</span></p>
+            <p><strong>Gender:</strong> <span id="student-gender">-</span></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="report-meta" aria-label="Report period and attendance">
+        <div><span>Academic Year</span><strong id="academic-year">-</strong></div>
+        <div><span>Term</span><strong id="term">-</strong></div>
+        <div><span>Attendance</span><strong id="attendance">-</strong></div>
+        <div><span>Class Teacher</span><strong id="teacher-name">-</strong></div>
+      </section>
+
+      <section class="academic-section" aria-labelledby="academic-record-heading">
+        <div class="section-heading">
+          <h2 id="academic-record-heading">Academic Record</h2>
+          <span id="class-level"></span>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th>Subject</th><th>Class Score</th><th>Exam Score</th><th>Total</th><th>Grade</th><th>Remark</th></tr>
+            </thead>
+            <tbody id="score-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="achievement-row" aria-label="Overall achievement">
+        <div><span>Overall Achievement</span><strong id="overall-grade">-</strong></div>
+        <div><span>Average Score</span><strong id="overall-average">-</strong></div>
+        <div><span>Subjects Recorded</span><strong id="subject-count">-</strong></div>
+      </section>
+
+      <section class="remarks-grid" aria-label="Teacher remarks">
+        <div class="remark-box"><h2>Class Teacher's Remark</h2><p id="class-remark">-</p></div>
+        <div class="remark-box"><h2>Head Teacher's Remark</h2><p id="head-remark">-</p></div>
+      </section>
+
+      <section class="grade-key" aria-label="Grade guide">
+        <h2>Achievement Guide</h2>
+        <p><span><strong>A</strong> Excellent</span><span><strong>B</strong> Very Good</span><span><strong>C</strong> Good</span><span><strong>D</strong> Credit</span><span><strong>E</strong> Pass</span><span><strong>F</strong> Needs Improvement</span></p>
+      </section>
+
+      <footer class="report-footer">
+        <div class="signature-line"><span>Class Teacher's Signature</span></div>
+        <div class="signature-line"><span>Head Teacher's Signature</span></div>
+        <p id="report-issue">Official student academic record</p>
+      </footer>
+    </article>
+  </main>
+  <script src="/js/student-report.js"></script>
+</body>
+</html>

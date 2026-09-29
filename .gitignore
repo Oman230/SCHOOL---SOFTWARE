@@ -1,7 +1,12 @@
-.env
-node_modules
-.env
-node_modules
-.env
-.env
-.env 2
+node_modules/
+.env*
+!.env.example
+*.log
+uploads/
+school.db
+**/school.db
+backend/database/*.sqlite
+backend/database/*.sqlite-shm
+backend/database/*.sqlite-wal
+dist/
+release/
