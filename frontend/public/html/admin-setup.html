@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Set Up Administrator</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <main class="login-wrapper">
+    <div class="auth-shell">
+      <section class="auth-panel brand-panel">
+        <div class="brand-mark">SIS</div>
+        <h2>Set up your school administrator</h2>
+        <p>Choose the administrator name, email, and password for this computer. Your school records are preserved.</p>
+      </section>
+      <section class="auth-panel form-panel">
+        <div class="login-card">
+          <h1>Administrator setup</h1>
+          <p style="margin:8px 0 24px;color:var(--color-muted);">Set an email and password you will remember.</p>
+          <form id="admin-setup-form">
+            <div class="form-group">
+              <label for="setup-admin-name">Full name</label>
+              <input id="setup-admin-name" name="fullName" type="text" maxlength="100" autocomplete="name" required />
+            </div>
+            <div class="form-group">
+              <label for="setup-admin-email">Admin email</label>
+              <input id="setup-admin-email" name="email" type="email" autocomplete="username" required />
+            </div>
+            <div class="form-group">
+              <label for="setup-admin-password">Password</label>
+              <input id="setup-admin-password" name="password" type="password" minlength="8" maxlength="72" autocomplete="new-password" required />
+            </div>
+            <div class="form-group">
+              <label for="setup-admin-confirm-password">Confirm password</label>
+              <input id="setup-admin-confirm-password" name="confirmPassword" type="password" minlength="8" maxlength="72" autocomplete="new-password" required />
+            </div>
+            <button id="setup-admin-submit" class="btn btn-primary" type="submit" style="width:100%;">Save admin login</button>
+            <p id="admin-setup-error" class="form-error" role="alert"></p>
+          </form>
+        </div>
+      </section>
+    </div>
+  </main>
+  <script src="/js/admin-setup.js"></script>
+</body>
+</html>

@@ -1,4 +1,5 @@
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+const { isDevelopmentLanOrigin } = require('../security/origins');
 
 function getOrigin(req) {
   if (req.headers.origin) return req.headers.origin;
@@ -33,7 +34,8 @@ function isAllowedOrigin(origin) {
 
   try {
     const url = new URL(origin);
-    return (url.hostname === 'localhost' || url.hostname === '127.0.0.1') && Boolean(url.port);
+    return ((url.hostname === 'localhost' || url.hostname === '127.0.0.1') && Boolean(url.port))
+      || isDevelopmentLanOrigin(origin);
   } catch (error) {
     return false;
   }

@@ -4,6 +4,7 @@
 // Teachers log in with their email + password.
 
 const jwt = require('jsonwebtoken');  // for creating login tokens
+const fs = require('fs');
 const pool = require('../config/db'); // our shared database connection
 const { hashPassword, verifyPassword, validatePassword } = require('../security/passwords');
 require('dotenv').config();
@@ -204,4 +205,82 @@ async function adminLogin(req, res) {
   }
 }
 
-module.exports = { studentLogin, teacherLogin, teacherSignup, adminLogin, isValidTeacherEmail };
+async function setupInitialAdmin(req, res) {
+  if (process.env.ELECTRON_APP !== 'true') {
+    return res.status(404).json({ message: 'Admin setup is only available in the desktop app.' });
+  }
+
+  const fullName = String(req.body.fullName || '').trim();
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const { password } = req.body;
+  if (!fullName || fullName.length > 100 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !password) {
+    return res.status(400).json({ message: 'Enter your name, a valid email address, and a password.' });
+  }
+
+  const passwordError = validatePassword(password);
+  if (passwordError) return res.status(400).json({ message: passwordError });
+
+  let client;
+  let transactionStarted = false;
+  try {
+    client = await pool.connect();
+    await client.query('BEGIN');
+    transactionStarted = true;
+    const existingAdmins = await client.query('SELECT id, email FROM admins');
+    const isLegacyAdminReplacement = process.env.ELECTRON_LEGACY_ADMIN_SETUP === 'true'
+      && existingAdmins.rows.length === 1
+      && existingAdmins.rows[0].email === 'admin@localhost';
+    if (existingAdmins.rows.length > 0 && !isLegacyAdminReplacement) {
+      await client.query('ROLLBACK');
+      transactionStarted = false;
+      return res.status(409).json({ message: 'An administrator account already exists.' });
+    }
+
+    const passwordHash = await hashPassword(password);
+    const result = isLegacyAdminReplacement
+      ? await client.query(
+        'UPDATE admins SET full_name = $1, email = $2, password_hash = $3 WHERE id = $4 RETURNING id, full_name',
+        [fullName, email, passwordHash, existingAdmins.rows[0].id]
+      )
+      : await client.query(
+        'INSERT INTO admins (full_name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, full_name',
+        [fullName, email, passwordHash]
+      );
+    await client.query('COMMIT');
+    transactionStarted = false;
+    if (isLegacyAdminReplacement) {
+      process.env.ELECTRON_LEGACY_ADMIN_SETUP = 'false';
+      if (process.env.ELECTRON_LEGACY_ADMIN_CREDENTIALS_PATH) {
+        fs.rmSync(process.env.ELECTRON_LEGACY_ADMIN_CREDENTIALS_PATH, { force: true });
+      }
+    }
+    const admin = result.rows[0];
+    const token = jwt.sign(
+      { id: admin.id, role: 'admin' },
+      process.env.JWT_SECRET,
+      { expiresIn: '12h', algorithm: 'HS256' }
+    );
+    return res.status(isLegacyAdminReplacement ? 200 : 201).json({
+      message: isLegacyAdminReplacement ? 'Administrator login updated.' : 'Administrator account created.',
+      token,
+      user: { id: admin.id, name: admin.full_name, role: 'admin' },
+    });
+  } catch (error) {
+    if (transactionStarted) {
+      try {
+        await client.query('ROLLBACK');
+      } catch (rollbackError) {
+        console.error('Admin setup rollback failed:', rollbackError);
+      }
+    }
+    if (error.code === 'SQLITE_CONSTRAINT_UNIQUE' || error.code === '23505') {
+      return res.status(409).json({ message: 'An administrator with that email already exists.' });
+    }
+    console.error('Initial admin setup failed:', error);
+    return res.status(500).json({ message: 'Could not create the administrator account.' });
+  } finally {
+    client?.release();
+  }
+}
+
+module.exports = { studentLogin, teacherLogin, teacherSignup, adminLogin, setupInitialAdmin, isValidTeacherEmail };

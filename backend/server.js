@@ -10,6 +10,7 @@ const http = require('http');
 const https = require('https');
 const helmet = require('helmet');
 const { csrfProtection } = require('./middleware/csrf');
+const { isDevelopmentLanOrigin } = require('./security/origins');
 require('dotenv').config();         // load variables from .env into process.env
 
 const frontendPath = path.join(__dirname, '..', 'frontend');
@@ -44,7 +45,7 @@ const configuredOrigin = process.env.APP_BASE_URL ? new URL(process.env.APP_BASE
 app.use(cors({
   origin(origin, callback) {
     if (!origin) return callback(null, true);
-    if (configuredOrigin === origin || (process.env.NODE_ENV !== 'production' && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin))) {
+    if (configuredOrigin === origin || (process.env.NODE_ENV !== 'production' && /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) || isDevelopmentLanOrigin(origin)) {
       return callback(null, true);
     }
     return callback(new Error('CORS origin denied.'));
@@ -133,7 +134,22 @@ function startServer(port = DEFAULT_PORT, host) {
 }
 
 if (require.main === module) {
-  startServer().catch((error) => {
+  const { testNeonConnection } = require('../electron/cloud-sync');
+  const connectionString = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL;
+  const testConfiguredNeon = async () => {
+    if (!connectionString) {
+      console.info('[Neon] Connection test skipped: set NEON_DATABASE_URL or DATABASE_URL.');
+      return;
+    }
+    try {
+      await testNeonConnection(connectionString);
+      console.info('[Neon] Connection test passed.');
+    } catch (error) {
+      console.error(`[Neon] Connection test failed${error.code ? ` (${error.code})` : ''}. SQLite server will still start.`);
+    }
+  };
+
+  testConfiguredNeon().then(() => startServer()).catch((error) => {
     console.error('❌ Server failed to start:', error);
     process.exit(1);
   });

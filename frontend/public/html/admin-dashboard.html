@@ -23,6 +23,36 @@
       <h2 id="welcome-heading">Welcome!</h2>
       <p>Manage classrooms, teachers, and students for the whole school here.</p>
 
+      <section class="card" id="database-backup-panel" hidden aria-labelledby="database-backup-title">
+        <div class="section-head">
+          <div class="title-wrap">
+            <span class="eyebrow">Data protection</span>
+            <h3 id="database-backup-title">Database backup</h3>
+          </div>
+          <span class="status-pill" id="database-backup-status" role="status">Checking backup status...</span>
+        </div>
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+          <button class="btn btn-primary" id="export-database-backup" type="button">Export backup</button>
+          <button class="btn btn-outline" id="restore-database-backup" type="button">Import backup</button>
+          <button class="btn btn-outline" id="choose-database-backup-folder" type="button">Choose daily backup folder</button>
+        </div>
+      </section>
+
+      <section class="card" id="cloud-sync-panel" hidden aria-labelledby="cloud-sync-title">
+        <div class="section-head">
+          <div class="title-wrap">
+            <span class="eyebrow">Off-device copy</span>
+            <h3 id="cloud-sync-title">Neon cloud sync</h3>
+          </div>
+          <span class="status-pill" id="cloud-sync-status" role="status">Checking cloud status...</span>
+        </div>
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+          <button class="btn btn-primary" id="sync-cloud-now" type="button">Sync now</button>
+          <button class="btn btn-outline" id="apply-cloud-snapshot" type="button">Download cloud data</button>
+          <button class="btn btn-outline" id="publish-cloud-snapshot" type="button">Upload this computer</button>
+        </div>
+      </section>
+
       <div class="stats-grid">
         <div class="stat-box">
           <div class="label">Total Students</div>

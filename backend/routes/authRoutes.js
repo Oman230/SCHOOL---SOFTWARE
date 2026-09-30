@@ -4,11 +4,12 @@
 
 const express = require('express');
 const router = express.Router(); // a mini, self-contained router we'll attach to the main app
-const { studentLogin, teacherLogin, teacherSignup, adminLogin } = require('../controllers/authController');
+const { studentLogin, teacherLogin, teacherSignup, adminLogin, setupInitialAdmin } = require('../controllers/authController');
 
 router.post('/student-login', studentLogin); // POST /api/auth/student-login
 router.post('/teacher-login', teacherLogin); // POST /api/auth/teacher-login
 router.post('/teacher-signup', teacherSignup); // POST /api/auth/teacher-signup
 router.post('/admin-login', adminLogin);     // POST /api/auth/admin-login
+router.post('/admin-setup', setupInitialAdmin);
 
 module.exports = router;

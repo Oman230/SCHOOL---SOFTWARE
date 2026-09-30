@@ -5,6 +5,103 @@
 const token = localStorage.getItem('token');
 const user = JSON.parse(localStorage.getItem('user') || 'null');
 
+function setupDatabaseBackups() {
+  const backup = window.schoolBackup;
+  const panel = document.getElementById('database-backup-panel');
+  if (!backup || !panel || !token || !user || user.role !== 'admin') return;
+  panel.hidden = false;
+
+  const status = document.getElementById('database-backup-status');
+  const refreshStatus = async () => {
+    try {
+      const details = await backup.getBackupStatus(token);
+      if (!details.localBackupAvailable) {
+        status.textContent = 'Daily local backup is being prepared.';
+      } else if (!details.backupFolder) {
+        status.textContent = 'Daily local backup saved. No external folder selected.';
+      } else if (details.externalBackupAvailable) {
+        status.textContent = `Daily local and external backups saved. Folder: ${details.backupFolder}`;
+      } else {
+        status.textContent = `Daily local backup saved. External copy is pending or its drive is unavailable: ${details.backupFolder}`;
+      }
+    } catch (error) {
+      status.textContent = 'Backup status unavailable';
+    }
+  };
+
+  document.getElementById('export-database-backup').addEventListener('click', async () => {
+    try {
+      const result = await backup.exportBackup(token);
+      if (!result.canceled) alert(`Backup exported to:\n${result.filePath}`);
+    } catch (error) {
+      alert(`Backup failed: ${error.message}`);
+    }
+  });
+
+  document.getElementById('restore-database-backup').addEventListener('click', async () => {
+    try {
+      await backup.restoreBackup(token);
+    } catch (error) {
+      alert(`Restore failed: ${error.message}`);
+    }
+  });
+
+  document.getElementById('choose-database-backup-folder').addEventListener('click', async () => {
+    try {
+      const result = await backup.chooseBackupFolder(token);
+      if (!result.canceled) await refreshStatus();
+    } catch (error) {
+      alert(`Could not set daily backup folder: ${error.message}`);
+    }
+  });
+
+  refreshStatus();
+}
+
+function setupCloudSync() {
+  const cloud = window.schoolBackup;
+  const panel = document.getElementById('cloud-sync-panel');
+  if (!cloud || !panel || !token || !user || user.role !== 'admin') return;
+  panel.hidden = false;
+
+  const status = document.getElementById('cloud-sync-status');
+  const refreshStatus = async () => {
+    try {
+      const details = await cloud.syncCloud(token);
+      status.textContent = details.message;
+      for (const button of panel.querySelectorAll('button')) button.disabled = !details.configured;
+    } catch (error) {
+      status.textContent = 'Cloud sync status unavailable.';
+    }
+  };
+
+  document.getElementById('sync-cloud-now').addEventListener('click', async () => {
+    try {
+      const details = await cloud.syncCloud(token);
+      status.textContent = details.message;
+    } catch (error) {
+      status.textContent = 'Could not sync with Neon.';
+    }
+  });
+  document.getElementById('apply-cloud-snapshot').addEventListener('click', async () => {
+    try {
+      await cloud.applyCloud(token);
+    } catch (error) {
+      alert(`Cloud download failed: ${error.message}`);
+    }
+  });
+  document.getElementById('publish-cloud-snapshot').addEventListener('click', async () => {
+    try {
+      const details = await cloud.publishCloud(token);
+      if (!details.canceled) status.textContent = details.message;
+    } catch (error) {
+      alert(`Cloud upload failed: ${error.message}`);
+    }
+  });
+
+  refreshStatus();
+}
+
 // Redirect to login if not logged in as an admin
 if (!token || !user || user.role !== 'admin') {
   window.location.href = '/login.html';
@@ -893,6 +990,8 @@ document.getElementById('logout-link').addEventListener('click', (event) => {
 });
 
 // ---------------------- INITIAL LOAD ----------------------
+setupDatabaseBackups();
+setupCloudSync();
 loadStats();
 loadSchoolFees();
 loadAdmissions();

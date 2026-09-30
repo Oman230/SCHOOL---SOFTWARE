@@ -63,8 +63,88 @@ test('teacher student creation supports parent contact and photo fields', () => 
 
 test('teacher signup and student photo upload are exposed as backend actions', () => {
   assert.equal(typeof authController.teacherSignup, 'function');
+  assert.equal(typeof authController.setupInitialAdmin, 'function');
   assert.equal(typeof require('../controllers/studentController').updateMyProfilePhoto, 'function');
   assert.equal(typeof require('../controllers/teacherController').deleteStudentForTeacher, 'function');
+});
+
+test('initial administrator setup is unavailable outside Electron', async () => {
+  const previousValue = process.env.ELECTRON_APP;
+  delete process.env.ELECTRON_APP;
+  let responseCode;
+  let responseBody;
+  const response = {
+    status(code) {
+      responseCode = code;
+      return this;
+    },
+    json(body) {
+      responseBody = body;
+      return this;
+    },
+  };
+
+  try {
+    await authController.setupInitialAdmin({ body: {} }, response);
+  } finally {
+    if (previousValue === undefined) delete process.env.ELECTRON_APP;
+    else process.env.ELECTRON_APP = previousValue;
+  }
+
+  assert.equal(responseCode, 404);
+  assert.match(responseBody.message, /desktop app/);
+});
+
+test('legacy generated admin setup updates the existing admin record in place', async () => {
+  const environment = {
+    ELECTRON_APP: process.env.ELECTRON_APP,
+    ELECTRON_LEGACY_ADMIN_SETUP: process.env.ELECTRON_LEGACY_ADMIN_SETUP,
+    ELECTRON_LEGACY_ADMIN_CREDENTIALS_PATH: process.env.ELECTRON_LEGACY_ADMIN_CREDENTIALS_PATH,
+    JWT_SECRET: process.env.JWT_SECRET,
+  };
+  const originalConnect = db.connect;
+  const queries = [];
+  let responseCode;
+  let responseBody;
+  db.connect = async () => ({
+    async query(sql, values = []) {
+      queries.push({ sql, values });
+      if (sql === 'SELECT id, email FROM admins') return { rows: [{ id: 7, email: 'admin@localhost' }] };
+      if (sql.startsWith('UPDATE admins')) return { rows: [{ id: 7, full_name: values[0] }] };
+      return { rows: [] };
+    },
+    release() {},
+  });
+  process.env.ELECTRON_APP = 'true';
+  process.env.ELECTRON_LEGACY_ADMIN_SETUP = 'true';
+  process.env.ELECTRON_LEGACY_ADMIN_CREDENTIALS_PATH = '';
+  process.env.JWT_SECRET = 'test-secret-for-admin-setup';
+
+  try {
+    await authController.setupInitialAdmin({
+      body: { fullName: 'New School Admin', email: 'owner@example.invalid', password: 'strong-test-password' },
+    }, {
+      status(code) {
+        responseCode = code;
+        return this;
+      },
+      json(body) {
+        responseBody = body;
+        return this;
+      },
+    });
+  } finally {
+    db.connect = originalConnect;
+    for (const [key, value] of Object.entries(environment)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+
+  assert.equal(responseCode, 200);
+  assert.deepEqual(responseBody.user, { id: 7, name: 'New School Admin', role: 'admin' });
+  assert.match(queries.find((query) => query.sql.startsWith('UPDATE admins')).sql, /^UPDATE admins/);
+  assert.equal(queries.some((query) => query.sql.startsWith('INSERT INTO admins')), false);
 });
 
 test('teacher school email validation enforces the approved institutional domain', () => {

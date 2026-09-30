@@ -10,9 +10,15 @@ Run `npm start` to start the server, `npm test` to run backend tests, and `npm r
 
 ## Desktop App
 
-The Electron app runs the existing interface and API locally and stores data in SQLite. Install dependencies with `npm install`, then launch the desktop app with `npm run desktop`. On first launch, save the generated administrator credentials shown in the setup dialog.
+The Electron app runs the existing interface and API locally and stores data in SQLite. Install dependencies with `npm install`, then launch the desktop app with `npm run desktop`. On first launch, create the administrator name, email, and password in the setup screen; the app signs you in immediately.
 
 The database and signing key are stored in Electron's per-user application data folder. The app creates the database automatically; `npm run seed` is only for development sample accounts. SQLite data is new and is not automatically imported from an existing PostgreSQL database. Initial credentials stay in `initial-admin-credentials.txt` in that folder, and the setup dialog repeats until you remove the file.
+
+The administrator dashboard includes **Export backup**, **Restore backup**, and **Choose daily backup folder**. The app creates a daily SQLite backup on startup and checks hourly, retaining the latest 30 daily copies in its application data folder. Choose a USB drive or a locally mounted Google Drive/OneDrive sync folder to keep an additional daily copy off the computer. Keep the drive connected while the app is running; exports can also be saved to any location. Restoring validates the selected SQLite database, saves the current database beside it, then restarts the app. Store backup files securely because they contain student and family data.
+
+Backups placed in a Google Drive/OneDrive sync folder are file backups managed by that provider. Neon sync is a separate snapshot service and is configured below.
+
+The standalone backend tests the Neon connection when started with `npm start`, using `NEON_DATABASE_URL` or `DATABASE_URL`. A connection-test failure is logged but does not prevent the local SQLite server from starting. To enable Electron snapshot sync, put a rotated Neon connection string in the per-user `settings.env` file as `NEON_DATABASE_URL` or `DATABASE_URL`, then restart the app. The app stores the latest SQLite snapshot in that Neon database, checks for changes every 15 minutes, and pulls the cloud snapshot on a new installation. SQLite remains the working database when offline. If two computers both make offline changes, sync stops and the admin must choose which snapshot to download or upload; it will not silently merge or overwrite those changes. Neon stores one current snapshot per school; keep daily local or USB backups for rollback. Use one Neon database per school. Keep the connection string private and rotate it if it has been shared.
 
 Optional Paystack and SMTP settings can be placed in `settings.env` in that same application data folder. See `.env.example` for the supported variable names, then restart the app. Leave these values unset to use the core app offline.
 
