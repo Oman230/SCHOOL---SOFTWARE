@@ -3,10 +3,15 @@ const path = require('path');
 require('dotenv').config();
 
 const isTestEnvironment = process.env.NODE_ENV === 'test' || Boolean(process.env.NODE_TEST_CONTEXT);
-const usePostgres = !isTestEnvironment
-  && process.env.ELECTRON_APP !== 'true'
-  && (process.env.DB_DRIVER === 'postgres'
-    || (process.env.DB_DRIVER !== 'sqlite' && Boolean(process.env.DATABASE_URL)));
+
+function shouldUsePostgres(environment = process.env, isTesting = isTestEnvironment) {
+  return !isTesting && (environment.DB_DRIVER === 'postgres'
+    || (environment.ELECTRON_APP !== 'true'
+      && environment.DB_DRIVER !== 'sqlite'
+      && Boolean(environment.DATABASE_URL)));
+}
+
+const usePostgres = shouldUsePostgres();
 
 if (usePostgres) {
   if (!process.env.DATABASE_URL) {
@@ -28,6 +33,7 @@ if (usePostgres) {
     database: null,
     databasePath: null,
     getPool: () => pool,
+    shouldUsePostgres,
   };
 } else {
   const Database = require('better-sqlite3');
@@ -118,5 +124,6 @@ if (usePostgres) {
     database,
     databasePath,
     prepareQuery,
+    shouldUsePostgres,
   };
 }

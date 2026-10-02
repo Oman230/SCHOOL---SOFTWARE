@@ -23,6 +23,10 @@
       <h2 id="welcome-heading">Welcome!</h2>
       <p>Manage classrooms, teachers, and students for the whole school here.</p>
 
+      <section class="card" id="shared-database-panel" hidden role="status">
+        This Electron app is connected to the same live school database as the web app.
+      </section>
+
       <section class="card" id="database-backup-panel" hidden aria-labelledby="database-backup-title">
         <div class="section-head">
           <div class="title-wrap">
@@ -330,6 +334,7 @@
     </main>
   </div>
 
+  <script src="/config.js"></script>
   <script src="/js/admin.js"></script>
 </body>
 </html>

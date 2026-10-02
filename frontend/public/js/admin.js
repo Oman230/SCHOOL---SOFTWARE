@@ -8,6 +8,7 @@ const user = JSON.parse(localStorage.getItem('user') || 'null');
 function setupDatabaseBackups() {
   const backup = window.schoolBackup;
   const panel = document.getElementById('database-backup-panel');
+  if (window.APP_DATABASE_MODE === 'shared') return;
   if (!backup || !panel || !token || !user || user.role !== 'admin') return;
   panel.hidden = false;
 
@@ -61,6 +62,7 @@ function setupDatabaseBackups() {
 function setupCloudSync() {
   const cloud = window.schoolBackup;
   const panel = document.getElementById('cloud-sync-panel');
+  if (window.APP_DATABASE_MODE === 'shared') return;
   if (!cloud || !panel || !token || !user || user.role !== 'admin') return;
   panel.hidden = false;
 
@@ -990,6 +992,9 @@ document.getElementById('logout-link').addEventListener('click', (event) => {
 });
 
 // ---------------------- INITIAL LOAD ----------------------
+if (window.APP_DATABASE_MODE === 'shared') {
+  document.getElementById('shared-database-panel').hidden = false;
+}
 setupDatabaseBackups();
 setupCloudSync();
 loadStats();

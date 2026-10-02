@@ -274,27 +274,38 @@ async function startDesktopApp() {
   fs.mkdirSync(userDataPath, { recursive: true });
   const settingsPath = path.join(userDataPath, 'settings.env');
   require('dotenv').config({ path: settingsPath });
+  require('dotenv').config();
   if (fs.existsSync(settingsPath)) fs.chmodSync(settingsPath, 0o600);
   process.env.SCHOOL_DB_PATH = path.join(userDataPath, 'school.sqlite');
   process.env.JWT_SECRET = loadOrCreateJwtSecret(userDataPath);
   process.env.NODE_ENV = 'development';
   process.env.ELECTRON_APP = 'true';
+  const sharedDatabaseUrl = process.env.SHARED_DATABASE_URL
+    || process.env.DATABASE_URL
+    || process.env.NEON_DATABASE_URL;
+  if (sharedDatabaseUrl && process.env.DB_DRIVER !== 'sqlite') {
+    process.env.DATABASE_URL = sharedDatabaseUrl;
+    process.env.DB_DRIVER = 'postgres';
+  }
 
   const database = require('../backend/config/db');
-  const { createCloudSync } = require('./cloud-sync');
-  cloudSync = createCloudSync({
-    database,
-    databasePath: database.databasePath,
-    userDataPath,
-    connectionString: process.env.NEON_DATABASE_URL || process.env.DATABASE_URL,
-  });
-  const cloudResult = await cloudSync.syncNow({ allowPull: true });
-  if (cloudResult.restartRequired) {
-    await database.end();
-    await cloudSync.close();
-    app.relaunch();
-    app.quit();
-    return;
+  process.env.APP_DATABASE_MODE = database.driver === 'postgres' ? 'shared' : 'offline';
+  if (database.driver === 'sqlite') {
+    const { createCloudSync } = require('./cloud-sync');
+    cloudSync = createCloudSync({
+      database,
+      databasePath: database.databasePath,
+      userDataPath,
+      connectionString: process.env.NEON_DATABASE_URL || process.env.DATABASE_URL,
+    });
+    const cloudResult = await cloudSync.syncNow({ allowPull: true });
+    if (cloudResult.restartRequired) {
+      await database.end();
+      await cloudSync.close();
+      app.relaunch();
+      app.quit();
+      return;
+    }
   }
 
   const { startServer } = require('../backend/server');
@@ -305,10 +316,10 @@ async function startDesktopApp() {
   const { ensureDefaultAdmin } = require('../backend/database/default-admin');
   await ensureDefaultAdmin(database);
   const adminCount = await database.query('SELECT COUNT(*) AS count FROM admins');
-  if (Number(adminCount.rows[0].count) > 0 && cloudSync.getStatus().state === 'waiting-for-data') {
+  if (cloudSync && Number(adminCount.rows[0].count) > 0 && cloudSync.getStatus().state === 'waiting-for-data') {
     await cloudSync.syncNow();
   }
-  startDailyBackupScheduler(userDataPath, cloudSync);
+  if (database.driver === 'sqlite') startDailyBackupScheduler(userDataPath, cloudSync);
   const adminUsers = await database.query('SELECT id, email FROM admins');
   const legacyCredentialsPath = path.join(userDataPath, 'initial-admin-credentials.txt');
   process.env.ELECTRON_LEGACY_ADMIN_CREDENTIALS_PATH = legacyCredentialsPath;

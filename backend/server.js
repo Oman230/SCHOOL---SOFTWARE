@@ -35,6 +35,7 @@ app.get('/config.js', (req, res) => {
   res.send(`
     window.PAYSTACK_PUBLIC_KEY = ${JSON.stringify(publicKey)};
     window.APP_BASE_URL = ${JSON.stringify(baseUrl)};
+    window.APP_DATABASE_MODE = ${JSON.stringify(process.env.APP_DATABASE_MODE || 'local')};
     window.ADMIN_WHATSAPP_NUMBER = ${JSON.stringify(adminWhatsAppNumber)};
     window.PAYSTACK_ENABLED = ${JSON.stringify(paystackEnabled)};
   `);

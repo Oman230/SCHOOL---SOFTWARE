@@ -12,19 +12,57 @@ test('fresh desktop databases receive the shared default admin without replacing
   const admins = [];
   const database = {
     async query(sql, values = []) {
+      if (sql.startsWith('SELECT id, email, full_name, password_hash FROM admins')) {
+        return { rows: admins.map(({ id, email, full_name, password_hash }) => ({ id, email, full_name, password_hash })) };
+      }
       if (sql.startsWith('SELECT id FROM admins')) {
         return { rows: admins.map(({ id }) => ({ id })) };
       }
-      admins.push({ id: admins.length + 1, email: values[1], passwordHash: values[2] });
+      admins.push({ id: admins.length + 1, email: values[1], full_name: values[0], password_hash: values[2] });
       return { rows: [] };
     },
   };
 
   assert.equal(await ensureDefaultAdmin(database), true);
   assert.equal(admins[0].email, DEFAULT_ADMIN.email);
-  assert.equal(await verifyPassword(DEFAULT_ADMIN.password, admins[0].passwordHash), true);
+  assert.equal(await verifyPassword(DEFAULT_ADMIN.password, admins[0].password_hash), true);
   assert.equal(await ensureDefaultAdmin(database), false);
   assert.equal(admins.length, 1);
+});
+
+test('Electron can use the explicitly configured shared PostgreSQL database', () => {
+  assert.equal(db.shouldUsePostgres({
+    ELECTRON_APP: 'true',
+    DB_DRIVER: 'postgres',
+    DATABASE_URL: 'postgresql://school.example/db',
+  }, false), true);
+  assert.equal(db.shouldUsePostgres({
+    ELECTRON_APP: 'true',
+    DB_DRIVER: 'sqlite',
+    DATABASE_URL: 'postgresql://school.example/db',
+  }, false), false);
+});
+
+test('legacy default admin rows are upgraded to the project default credentials', async () => {
+  const admins = [{ id: 1, email: 'admin@localhost', full_name: 'Legacy Admin', password_hash: 'legacy-hash' }];
+  const database = {
+    async query(sql, values = []) {
+      if (sql.startsWith('SELECT id, email, full_name, password_hash FROM admins')) {
+        return { rows: admins.map(({ id, email, full_name, password_hash }) => ({ id, email, full_name, password_hash })) };
+      }
+      if (sql.startsWith('UPDATE admins')) {
+        admins[0].full_name = values[0];
+        admins[0].email = values[1];
+        admins[0].password_hash = values[2];
+        return { rows: [] };
+      }
+      return { rows: [] };
+    },
+  };
+
+  assert.equal(await ensureDefaultAdmin(database), true);
+  assert.equal(admins[0].email, DEFAULT_ADMIN.email);
+  assert.equal(await verifyPassword(DEFAULT_ADMIN.password, admins[0].password_hash), true);
 });
 
 test('admin exposes subject management APIs', () => {
