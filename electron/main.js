@@ -40,7 +40,17 @@ async function createWindow(url) {
 
   const appOrigin = new URL(url).origin;
   mainWindow.webContents.setWindowOpenHandler(({ url: target }) => {
-    if (!target.startsWith(appOrigin)) shell.openExternal(target);
+    let targetUrl;
+    try {
+      targetUrl = new URL(target);
+    } catch (error) {
+      return { action: 'deny' };
+    }
+
+    if (targetUrl.origin === appOrigin) return { action: 'allow' };
+    if (targetUrl.protocol === 'https:' || targetUrl.protocol === 'http:') {
+      shell.openExternal(target);
+    }
     return { action: 'deny' };
   });
   mainWindow.webContents.on('will-navigate', (event, target) => {
