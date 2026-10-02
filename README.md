@@ -10,9 +10,9 @@ Run `npm start` to start the server, `npm test` to run backend tests, and `npm r
 
 ## Desktop App
 
-The Electron app runs the existing interface and API locally and stores data in SQLite. Install dependencies with `npm install`, then launch the desktop app with `npm run desktop`. On first launch, create the administrator name, email, and password in the setup screen; the app signs you in immediately.
+The Electron app runs the existing interface and API locally and stores data in SQLite. Install dependencies with `npm install`, then launch the desktop app with `npm run desktop`. On a fresh install, sign in with the default administrator credentials listed below.
 
-The database and signing key are stored in Electron's per-user application data folder. The app creates the database automatically; `npm run seed` is only for development sample accounts. SQLite data is new and is not automatically imported from an existing PostgreSQL database. Initial credentials stay in `initial-admin-credentials.txt` in that folder, and the setup dialog repeats until you remove the file.
+The database and signing key are stored in Electron's per-user application data folder. A fresh desktop install creates the default administrator account `admin@school.com` with password `password123`. Existing administrator accounts are preserved. The app creates the database automatically; `npm run seed` is only for development sample accounts. SQLite data is new and is not automatically imported from an existing PostgreSQL database.
 
 The administrator dashboard includes **Export backup**, **Restore backup**, and **Choose daily backup folder**. The app creates a daily SQLite backup on startup and checks hourly, retaining the latest 30 daily copies in its application data folder. Choose a USB drive or a locally mounted Google Drive/OneDrive sync folder to keep an additional daily copy off the computer. Keep the drive connected while the app is running; exports can also be saved to any location. Restoring validates the selected SQLite database, saves the current database beside it, then restarts the app. Store backup files securely because they contain student and family data.
 
