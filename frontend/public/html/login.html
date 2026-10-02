@@ -62,7 +62,12 @@
             </div>
             <div class="form-group">
               <label for="studentPassword">Password</label>
-              <input type="password" id="studentPassword" placeholder="Enter your password" required />
+              <div class="password-field">
+                <input type="password" id="studentPassword" placeholder="Enter your password" required />
+                <button class="password-toggle" type="button" aria-label="Show password" title="Show password" aria-controls="studentPassword" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><path class="password-toggle-slash" d="m3 3 18 18"/></svg>
+                </button>
+              </div>
             </div>
             <button type="submit" class="btn btn-primary" style="width:100%;">Login as Student</button>
             <p class="form-error" id="student-error"></p>
@@ -75,7 +80,12 @@
             </div>
             <div class="form-group">
               <label for="teacherPassword">Password</label>
-              <input type="password" id="teacherPassword" placeholder="Enter your password" required />
+              <div class="password-field">
+                <input type="password" id="teacherPassword" placeholder="Enter your password" required />
+                <button class="password-toggle" type="button" aria-label="Show password" title="Show password" aria-controls="teacherPassword" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><path class="password-toggle-slash" d="m3 3 18 18"/></svg>
+                </button>
+              </div>
             </div>
             <button type="submit" class="btn btn-primary" style="width:100%;">Login as Teacher</button>
             <p class="form-error" id="teacher-error"></p>
@@ -88,7 +98,12 @@
             </div>
             <div class="form-group">
               <label for="adminPassword">Password</label>
-              <input type="password" id="adminPassword" placeholder="Enter your password" required />
+              <div class="password-field">
+                <input type="password" id="adminPassword" placeholder="Enter your password" required />
+                <button class="password-toggle" type="button" aria-label="Show password" title="Show password" aria-controls="adminPassword" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><path class="password-toggle-slash" d="m3 3 18 18"/></svg>
+                </button>
+              </div>
             </div>
             <button type="submit" class="btn btn-primary" style="width:100%;">Login as Admin</button>
             <p class="form-error" id="admin-error"></p>
@@ -99,6 +114,7 @@
   </div>
 
   <!-- Link to our login JavaScript logic -->
+  <script src="/js/password-toggle.js"></script>
   <script src="/js/auth.js"></script>
   <script>
     function animateCounter(element) {

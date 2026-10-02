@@ -29,11 +29,21 @@
             </div>
             <div class="form-group">
               <label for="setup-admin-password">Password</label>
-              <input id="setup-admin-password" name="password" type="password" minlength="8" maxlength="72" autocomplete="new-password" required />
+              <div class="password-field">
+                <input id="setup-admin-password" name="password" type="password" minlength="8" maxlength="72" autocomplete="new-password" required />
+                <button class="password-toggle" type="button" aria-label="Show password" title="Show password" aria-controls="setup-admin-password" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><path class="password-toggle-slash" d="m3 3 18 18"/></svg>
+                </button>
+              </div>
             </div>
             <div class="form-group">
               <label for="setup-admin-confirm-password">Confirm password</label>
-              <input id="setup-admin-confirm-password" name="confirmPassword" type="password" minlength="8" maxlength="72" autocomplete="new-password" required />
+              <div class="password-field">
+                <input id="setup-admin-confirm-password" name="confirmPassword" type="password" minlength="8" maxlength="72" autocomplete="new-password" required />
+                <button class="password-toggle" type="button" aria-label="Show password" title="Show password" aria-controls="setup-admin-confirm-password" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/><path class="password-toggle-slash" d="m3 3 18 18"/></svg>
+                </button>
+              </div>
             </div>
             <button id="setup-admin-submit" class="btn btn-primary" type="submit" style="width:100%;">Save admin login</button>
             <p id="admin-setup-error" class="form-error" role="alert"></p>
@@ -42,6 +52,7 @@
       </section>
     </div>
   </main>
+  <script src="/js/password-toggle.js"></script>
   <script src="/js/admin-setup.js"></script>
 </body>
 </html>
