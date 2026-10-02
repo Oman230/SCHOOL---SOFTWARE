@@ -8,15 +8,18 @@ const user = JSON.parse(localStorage.getItem('user') || 'null');
 function setupDatabaseBackups() {
   const backup = window.schoolBackup;
   const panel = document.getElementById('database-backup-panel');
-  if (window.APP_DATABASE_MODE === 'shared') return;
   if (!backup || !panel || !token || !user || user.role !== 'admin') return;
   panel.hidden = false;
 
   const status = document.getElementById('database-backup-status');
+  const backupFolderButton = document.getElementById('choose-database-backup-folder');
   const refreshStatus = async () => {
     try {
       const details = await backup.getBackupStatus(token);
-      if (!details.localBackupAvailable) {
+      if (details.sharedDatabase) {
+        status.textContent = 'Connected to the shared PostgreSQL database. Export a copy before making major changes.';
+        backupFolderButton.hidden = true;
+      } else if (!details.localBackupAvailable) {
         status.textContent = 'Daily local backup is being prepared.';
       } else if (!details.backupFolder) {
         status.textContent = 'Daily local backup saved. No external folder selected.';
@@ -62,11 +65,15 @@ function setupDatabaseBackups() {
 function setupCloudSync() {
   const cloud = window.schoolBackup;
   const panel = document.getElementById('cloud-sync-panel');
-  if (window.APP_DATABASE_MODE === 'shared') return;
   if (!cloud || !panel || !token || !user || user.role !== 'admin') return;
   panel.hidden = false;
 
   const status = document.getElementById('cloud-sync-status');
+  if (window.APP_DATABASE_MODE === 'shared') {
+    status.textContent = 'Using the shared live PostgreSQL database. Snapshot sync is not needed.';
+    for (const button of panel.querySelectorAll('button')) button.disabled = true;
+    return;
+  }
   const refreshStatus = async () => {
     try {
       const details = await cloud.syncCloud(token);

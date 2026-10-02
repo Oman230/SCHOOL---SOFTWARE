@@ -1,4 +1,4 @@
-const { hashPassword, verifyPassword } = require('../security/passwords');
+const { hashPassword } = require('../security/passwords');
 
 const DEFAULT_ADMIN = Object.freeze({
   fullName: 'Head Administrator',
@@ -22,14 +22,7 @@ async function ensureDefaultAdmin(database) {
   if (existingAdmins.rows.length !== 1) return false;
 
   const [admin] = existingAdmins.rows;
-  const isLegacyDefaultAdmin = admin.email === 'admin@localhost';
-  if (!isLegacyDefaultAdmin && admin.email !== DEFAULT_ADMIN.email) return false;
-
-  const defaultPasswordMatches = admin.password_hash
-    ? await verifyPassword(DEFAULT_ADMIN.password, admin.password_hash)
-    : false;
-
-  if (defaultPasswordMatches) return false;
+  if (admin.email !== 'admin@localhost') return false;
 
   const passwordHash = await hashPassword(DEFAULT_ADMIN.password);
   await database.query(

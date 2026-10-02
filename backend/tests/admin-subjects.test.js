@@ -65,6 +65,20 @@ test('legacy default admin rows are upgraded to the project default credentials'
   assert.equal(await verifyPassword(DEFAULT_ADMIN.password, admins[0].password_hash), true);
 });
 
+test('existing default-email admin credentials are preserved', async () => {
+  const passwordHash = 'custom-password-hash';
+  const database = {
+    async query(sql) {
+      if (sql.startsWith('SELECT id, email, full_name, password_hash FROM admins')) {
+        return { rows: [{ id: 1, email: DEFAULT_ADMIN.email, full_name: 'School Admin', password_hash: passwordHash }] };
+      }
+      assert.fail('Existing administrator credentials must not be changed.');
+    },
+  };
+
+  assert.equal(await ensureDefaultAdmin(database), false);
+});
+
 test('admin exposes subject management APIs', () => {
   assert.equal(typeof admin.getSubjects, 'function');
   assert.equal(typeof admin.createSubject, 'function');

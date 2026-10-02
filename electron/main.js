@@ -96,24 +96,38 @@ function ensureTrustedAdminPage(event, token) {
 }
 
 function registerBackupHandlers(userDataPath, cloudSyncService) {
-  const { createBackup, createDailyBackups, installBackup, validateBackupFile } = require('./backup');
+  const {
+    createBackup,
+    createDailyBackups,
+    createPostgresBackup,
+    installBackup,
+    restorePostgresBackup,
+    validateBackupFile,
+    validatePostgresBackupFile,
+  } = require('./backup');
   const defaultBackupFolder = path.join(userDataPath, 'backups');
 
   ipcMain.handle('school-backup:export', async (event, token) => {
     ensureTrustedAdminPage(event, token);
+    const database = require('../backend/config/db');
+    const isPostgres = database.driver === 'postgres';
     const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
       title: 'Export school database backup',
-      defaultPath: path.join(app.getPath('documents'), `school-backup-${new Date().toISOString().slice(0, 10)}.sqlite`),
-      filters: [{ name: 'SQLite database', extensions: ['sqlite', 'db'] }],
+      defaultPath: path.join(app.getPath('documents'), `school-backup-${new Date().toISOString().slice(0, 10)}.${isPostgres ? 'schoolbackup' : 'sqlite'}`),
+      filters: [isPostgres
+        ? { name: 'School database backup', extensions: ['schoolbackup', 'json'] }
+        : { name: 'SQLite database', extensions: ['sqlite', 'db'] }],
     });
     if (canceled || !filePath) return { canceled: true };
-    const database = require('../backend/config/db');
-    await createBackup(database.database, filePath);
+    if (isPostgres) await createPostgresBackup(database.getPool(), filePath);
+    else await createBackup(database.database, filePath);
     return { canceled: false, filePath };
   });
 
   ipcMain.handle('school-backup:choose-folder', async (event, token) => {
     ensureTrustedAdminPage(event, token);
+    const database = require('../backend/config/db');
+    if (database.driver !== 'sqlite') throw new Error('Daily backup folders are only available with local SQLite storage.');
     const settings = readBackupSettings();
     const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
       title: 'Choose daily backup folder',
@@ -129,6 +143,8 @@ function registerBackupHandlers(userDataPath, cloudSyncService) {
 
   ipcMain.handle('school-backup:status', (event, token) => {
     ensureTrustedAdminPage(event, token);
+    const database = require('../backend/config/db');
+    if (database.driver === 'postgres') return { sharedDatabase: true };
     const settings = readBackupSettings();
     const filename = `school-backup-${new Date().toISOString().slice(0, 10)}.sqlite`;
     const todayBackup = path.join(defaultBackupFolder, filename);
@@ -145,10 +161,14 @@ function registerBackupHandlers(userDataPath, cloudSyncService) {
 
   ipcMain.handle('school-backup:restore', async (event, token) => {
     ensureTrustedAdminPage(event, token);
+    const database = require('../backend/config/db');
+    const isPostgres = database.driver === 'postgres';
     const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
       title: 'Select school database backup to restore',
       properties: ['openFile'],
-      filters: [{ name: 'SQLite database', extensions: ['sqlite', 'db', 'sqlite3'] }],
+      filters: [isPostgres
+        ? { name: 'School database backup', extensions: ['schoolbackup', 'json'] }
+        : { name: 'SQLite database', extensions: ['sqlite', 'db', 'sqlite3'] }],
     });
     if (canceled || !filePaths[0]) return { canceled: true };
 
@@ -156,7 +176,7 @@ function registerBackupHandlers(userDataPath, cloudSyncService) {
       type: 'warning',
       title: 'Replace school database?',
       message: 'Restoring replaces all current school data with the selected backup.',
-      detail: 'The current database will be saved beside it before the app restarts.',
+      detail: 'A safety copy of the current database will be saved before the app restarts.',
       buttons: ['Cancel', 'Restore and restart'],
       defaultId: 0,
       cancelId: 0,
@@ -164,10 +184,10 @@ function registerBackupHandlers(userDataPath, cloudSyncService) {
     });
     if (confirmation.response !== 1) return { canceled: true };
 
-    const database = require('../backend/config/db');
     const databasePath = database.databasePath;
-    validateBackupFile(filePaths[0]);
-    if (path.resolve(filePaths[0]) === path.resolve(databasePath)) {
+    if (isPostgres) validatePostgresBackupFile(filePaths[0]);
+    else validateBackupFile(filePaths[0]);
+    if (!isPostgres && path.resolve(filePaths[0]) === path.resolve(databasePath)) {
       throw new Error('Choose a backup file other than the active database.');
     }
     await new Promise((resolve, reject) => {
@@ -176,7 +196,13 @@ function registerBackupHandlers(userDataPath, cloudSyncService) {
     });
     server = null;
     try {
-      await installBackup(database.database, filePaths[0], databasePath);
+      if (isPostgres) {
+        const safetyCopy = path.join(userDataPath, 'backups', `school-before-restore-${Date.now()}.schoolbackup`);
+        await createPostgresBackup(database.getPool(), safetyCopy);
+        await restorePostgresBackup(database.getPool(), filePaths[0]);
+      } else {
+        await installBackup(database.database, filePaths[0], databasePath);
+      }
     } catch (error) {
       await dialog.showMessageBox({
         type: 'error',
@@ -195,66 +221,68 @@ function registerBackupHandlers(userDataPath, cloudSyncService) {
     return { canceled: false };
   });
 
-  ipcMain.handle('school-cloud:status', (event, token) => {
-    ensureTrustedAdminPage(event, token);
-    return cloudSyncService.getStatus();
-  });
-
-  ipcMain.handle('school-cloud:sync', async (event, token) => {
-    ensureTrustedAdminPage(event, token);
-    return cloudSyncService.syncNow();
-  });
-
-  ipcMain.handle('school-cloud:apply', async (event, token) => {
-    ensureTrustedAdminPage(event, token);
-    const confirmation = await dialog.showMessageBox(mainWindow, {
-      type: 'warning',
-      title: 'Use the Neon database?',
-      message: 'Replace this computer’s school records with the latest Neon snapshot?',
-      detail: 'The current SQLite database is preserved beside it. The app will restart after the download.',
-      buttons: ['Cancel', 'Download and restart'],
-      defaultId: 0,
-      cancelId: 0,
-      noLink: true,
+  if (cloudSyncService) {
+    ipcMain.handle('school-cloud:status', (event, token) => {
+      ensureTrustedAdminPage(event, token);
+      return cloudSyncService.getStatus();
     });
-    if (confirmation.response !== 1) return { canceled: true };
-    await new Promise((resolve, reject) => {
-      if (!server?.listening) return resolve();
-      server.close((error) => error ? reject(error) : resolve());
+
+    ipcMain.handle('school-cloud:sync', async (event, token) => {
+      ensureTrustedAdminPage(event, token);
+      return cloudSyncService.syncNow();
     });
-    server = null;
-    try {
-      await cloudSyncService.applyCloudSnapshot();
-    } catch (error) {
-      await dialog.showMessageBox({
-        type: 'error',
-        title: 'Cloud download failed',
-        message: 'The app will restart using the existing local database.',
-        detail: error.message,
-        buttons: ['Restart'],
+
+    ipcMain.handle('school-cloud:apply', async (event, token) => {
+      ensureTrustedAdminPage(event, token);
+      const confirmation = await dialog.showMessageBox(mainWindow, {
+        type: 'warning',
+        title: 'Use the Neon database?',
+        message: 'Replace this computer’s school records with the latest Neon snapshot?',
+        detail: 'The current SQLite database is preserved beside it. The app will restart after the download.',
+        buttons: ['Cancel', 'Download and restart'],
+        defaultId: 0,
+        cancelId: 0,
         noLink: true,
       });
-    }
-    app.relaunch();
-    app.quit();
-    return { canceled: false };
-  });
-
-  ipcMain.handle('school-cloud:publish', async (event, token) => {
-    ensureTrustedAdminPage(event, token);
-    const confirmation = await dialog.showMessageBox(mainWindow, {
-      type: 'warning',
-      title: 'Replace the Neon snapshot?',
-      message: 'Upload this computer’s school records as the latest Neon database?',
-      detail: 'This replaces the current cloud snapshot. Use daily local or USB backups for rollback.',
-      buttons: ['Cancel', 'Upload this computer'],
-      defaultId: 0,
-      cancelId: 0,
-      noLink: true,
+      if (confirmation.response !== 1) return { canceled: true };
+      await new Promise((resolve, reject) => {
+        if (!server?.listening) return resolve();
+        server.close((error) => error ? reject(error) : resolve());
+      });
+      server = null;
+      try {
+        await cloudSyncService.applyCloudSnapshot();
+      } catch (error) {
+        await dialog.showMessageBox({
+          type: 'error',
+          title: 'Cloud download failed',
+          message: 'The app will restart using the existing local database.',
+          detail: error.message,
+          buttons: ['Restart'],
+          noLink: true,
+        });
+      }
+      app.relaunch();
+      app.quit();
+      return { canceled: false };
     });
-    if (confirmation.response !== 1) return { canceled: true };
-    return cloudSyncService.publishLocalSnapshot();
-  });
+
+    ipcMain.handle('school-cloud:publish', async (event, token) => {
+      ensureTrustedAdminPage(event, token);
+      const confirmation = await dialog.showMessageBox(mainWindow, {
+        type: 'warning',
+        title: 'Replace the Neon snapshot?',
+        message: 'Upload this computer’s school records as the latest Neon database?',
+        detail: 'This replaces the current cloud snapshot. Use daily local or USB backups for rollback.',
+        buttons: ['Cancel', 'Upload this computer'],
+        defaultId: 0,
+        cancelId: 0,
+        noLink: true,
+      });
+      if (confirmation.response !== 1) return { canceled: true };
+      return cloudSyncService.publishLocalSnapshot();
+    });
+  }
 }
 
 async function runDailyBackup(userDataPath) {
@@ -330,6 +358,7 @@ async function startDesktopApp() {
     await cloudSync.syncNow();
   }
   if (database.driver === 'sqlite') startDailyBackupScheduler(userDataPath, cloudSync);
+  else registerBackupHandlers(userDataPath, null);
   const adminUsers = await database.query('SELECT id, email FROM admins');
   const legacyCredentialsPath = path.join(userDataPath, 'initial-admin-credentials.txt');
   process.env.ELECTRON_LEGACY_ADMIN_CREDENTIALS_PATH = legacyCredentialsPath;
