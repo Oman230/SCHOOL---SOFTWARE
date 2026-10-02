@@ -2,7 +2,11 @@ const pool = require('../config/db');
 
 async function setupDatabase() {
   await pool.schemaReady();
-  console.log(`SQLite database ready at ${pool.databasePath}`);
+  if (pool.driver === 'postgres') {
+    console.log('PostgreSQL database schema is available.');
+  } else {
+    console.log(`SQLite database ready at ${pool.databasePath}`);
+  }
 }
 
 setupDatabase()

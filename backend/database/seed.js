@@ -46,6 +46,7 @@ async function seed() {
     console.log('   Student login -> ID: SIS-2026-001           | password: password123');
   } catch (error) {
     console.error('❌ Seeding failed:', error);
+    process.exitCode = 1;
   } finally {
     await pool.end(); // close the database connection so the script exits cleanly
   }
