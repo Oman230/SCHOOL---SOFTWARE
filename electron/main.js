@@ -302,6 +302,8 @@ async function startDesktopApp() {
   const port = server.address().port;
   process.env.PORT = String(port);
   process.env.APP_BASE_URL = `http://127.0.0.1:${port}`;
+  const { ensureDefaultAdmin } = require('../backend/database/default-admin');
+  await ensureDefaultAdmin(database);
   const adminCount = await database.query('SELECT COUNT(*) AS count FROM admins');
   if (Number(adminCount.rows[0].count) > 0 && cloudSync.getStatus().state === 'waiting-for-data') {
     await cloudSync.syncNow();

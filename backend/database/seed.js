@@ -9,18 +9,20 @@
 
 const pool = require('../config/db');
 const { hashPassword } = require('../security/passwords');
+const { DEFAULT_ADMIN } = require('./default-admin');
 
 async function seed() {
   try {
     // Hash the shared test password once (never store plain-text passwords)
-    const passwordHash = await hashPassword('password123');
+    const passwordHash = await hashPassword(DEFAULT_ADMIN.password);
 
     // Create a sample admin account
     await pool.query(
       `INSERT INTO admins (full_name, email, password_hash)
        VALUES ($1, $2, $3)
-       ON CONFLICT (email) DO NOTHING`,
-      ['Head Administrator', 'admin@school.com', passwordHash]
+        ON CONFLICT (email) DO UPDATE
+        SET full_name = EXCLUDED.full_name, password_hash = EXCLUDED.password_hash`,
+            [DEFAULT_ADMIN.fullName, DEFAULT_ADMIN.email, passwordHash]
     );
 
     // Create a sample teacher assigned to classroom id 1 (JHS 1A, from schema.sql)

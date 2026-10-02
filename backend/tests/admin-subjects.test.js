@@ -5,6 +5,27 @@ const authController = require('../controllers/authController');
 const teacherController = require('../controllers/teacherController');
 const assignmentController = require('../controllers/assignmentController');
 const db = require('../config/db');
+const { DEFAULT_ADMIN, ensureDefaultAdmin } = require('../database/default-admin');
+const { verifyPassword } = require('../security/passwords');
+
+test('fresh desktop databases receive the shared default admin without replacing existing admins', async () => {
+  const admins = [];
+  const database = {
+    async query(sql, values = []) {
+      if (sql.startsWith('SELECT id FROM admins')) {
+        return { rows: admins.map(({ id }) => ({ id })) };
+      }
+      admins.push({ id: admins.length + 1, email: values[1], passwordHash: values[2] });
+      return { rows: [] };
+    },
+  };
+
+  assert.equal(await ensureDefaultAdmin(database), true);
+  assert.equal(admins[0].email, DEFAULT_ADMIN.email);
+  assert.equal(await verifyPassword(DEFAULT_ADMIN.password, admins[0].passwordHash), true);
+  assert.equal(await ensureDefaultAdmin(database), false);
+  assert.equal(admins.length, 1);
+});
 
 test('admin exposes subject management APIs', () => {
   assert.equal(typeof admin.getSubjects, 'function');
