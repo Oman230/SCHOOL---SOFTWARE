@@ -8,11 +8,15 @@ const user = JSON.parse(localStorage.getItem('user') || 'null');
 function setupDatabaseBackups() {
   const backup = window.schoolBackup;
   const panel = document.getElementById('database-backup-panel');
-  if (!backup || !panel || !token || !user || user.role !== 'admin') return;
+  if (!panel || !token || !user || user.role !== 'admin') return;
   panel.hidden = false;
 
   const status = document.getElementById('database-backup-status');
   const backupFolderButton = document.getElementById('choose-database-backup-folder');
+  const fileInput = document.getElementById('database-backup-file');
+  backupFolderButton.hidden = !backup;
+  if (!backup) status.textContent = 'Browser backup ready. Importing replaces all current school records.';
+
   const refreshStatus = async () => {
     try {
       const details = await backup.getBackupStatus(token);
@@ -35,20 +39,58 @@ function setupDatabaseBackups() {
 
   document.getElementById('export-database-backup').addEventListener('click', async () => {
     try {
-      const result = await backup.exportBackup(token);
-      if (!result.canceled) alert(`Backup exported to:\n${result.filePath}`);
+      if (backup) {
+        const result = await backup.exportBackup(token);
+        if (!result.canceled) alert(`Backup exported to:\n${result.filePath}`);
+        return;
+      }
+      const response = await fetch('/api/admin/backup', { headers: { Authorization: `Bearer ${token}` } });
+      if (!response.ok) throw new Error((await response.json()).message || 'Could not export backup.');
+      const filename = response.headers.get('content-disposition')?.match(/filename="?([^";]+)"?/)?.[1] || 'school-backup';
+      const downloadUrl = URL.createObjectURL(await response.blob());
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      link.click();
+      URL.revokeObjectURL(downloadUrl);
     } catch (error) {
       alert(`Backup failed: ${error.message}`);
     }
   });
 
   document.getElementById('restore-database-backup').addEventListener('click', async () => {
+    if (!backup) {
+      fileInput.click();
+      return;
+    }
     try {
       await backup.restoreBackup(token);
     } catch (error) {
       alert(`Restore failed: ${error.message}`);
     }
   });
+
+  if (!backup) {
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files[0];
+      fileInput.value = '';
+      if (!file || !confirm('Importing this backup replaces all current school records. Continue?')) return;
+      try {
+        const response = await fetch('/api/admin/backup', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/octet-stream' },
+          body: file,
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || 'Could not import backup.');
+        alert(result.message);
+        window.location.reload();
+      } catch (error) {
+        alert(`Restore failed: ${error.message}`);
+      }
+    });
+    return;
+  }
 
   document.getElementById('choose-database-backup-folder').addEventListener('click', async () => {
     try {

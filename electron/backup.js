@@ -284,6 +284,40 @@ async function installBackup(database, sourcePath, databasePath) {
   return safetyPath;
 }
 
+function restoreSqliteBackup(database, sourcePath) {
+  const resolvedSource = validateBackupFile(sourcePath);
+  const source = new Database(resolvedSource, { readonly: true, fileMustExist: true });
+  const sourceTables = source.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'").all().map((row) => row.name);
+  source.close();
+
+  database.pragma('foreign_keys = OFF');
+  database.prepare('ATTACH DATABASE ? AS incoming_backup').run(resolvedSource);
+  try {
+    const currentTables = database.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'").all().map((row) => row.name);
+    const quotedTables = currentTables.map(quoteIdentifier);
+    const restore = database.transaction(() => {
+      for (const table of [...quotedTables].reverse()) database.exec(`DELETE FROM ${table}`);
+      for (const tableName of sourceTables) {
+        if (!currentTables.includes(tableName)) continue;
+        const table = quoteIdentifier(tableName);
+        const sourceColumns = database.prepare(`PRAGMA incoming_backup.table_info(${table})`).all().map((column) => column.name);
+        const currentColumns = database.prepare(`PRAGMA table_info(${table})`).all().map((column) => column.name);
+        const columns = sourceColumns.filter((column) => currentColumns.includes(column));
+        if (!columns.length) continue;
+        const names = columns.map(quoteIdentifier).join(', ');
+        database.exec(`INSERT INTO ${table} (${names}) SELECT ${names} FROM incoming_backup.${table}`);
+      }
+      const violations = database.pragma('foreign_key_check');
+      if (violations.length) throw new Error('The selected backup contains records with invalid relationships.');
+    });
+    restore();
+    return { restored: true };
+  } finally {
+    database.exec('DETACH DATABASE incoming_backup');
+    database.pragma('foreign_keys = ON');
+  }
+}
+
 function pruneDailyBackups(folder) {
   if (!fs.existsSync(folder)) return;
   const backups = fs.readdirSync(folder)
@@ -320,6 +354,7 @@ module.exports = {
   createPostgresBackup,
   parsePostgresBackup,
   restorePostgresBackup,
+  restoreSqliteBackup,
   validatePostgresBackupFile,
   validateBackupFile,
 };

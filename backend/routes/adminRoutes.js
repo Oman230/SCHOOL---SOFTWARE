@@ -7,9 +7,13 @@ const { verifyToken, requireAdmin } = require('../middleware/auth');
 const admin = require('../controllers/adminController');
 const admission = require('../controllers/admissionController');
 const { sendParentNotice } = require('../controllers/emailController');
+const backup = require('../controllers/backupController');
 
 // All routes below run verifyToken + requireAdmin first
 router.use(verifyToken, requireAdmin);
+
+router.get('/backup', backup.exportDatabase);
+router.post('/backup', express.raw({ type: 'application/octet-stream', limit: '512mb' }), backup.importDatabase);
 
 router.get('/stats', admin.getStats); // GET /api/admin/stats
 router.post('/parent-notices', sendParentNotice);

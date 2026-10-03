@@ -11,6 +11,7 @@ const {
   installBackup,
   parsePostgresBackup,
   restorePostgresBackup,
+  restoreSqliteBackup,
   validateBackupFile,
 } = require('../../electron/backup');
 
@@ -89,6 +90,21 @@ test('backup validation rejects non-school SQLite databases', async (t) => {
   const activePath = path.join(folder, 'active.sqlite');
   const activeDatabase = createSchoolDatabase(activePath, 'Unchanged student');
   await assert.rejects(installBackup(activeDatabase, unrelatedPath, activePath));
+  assert.equal(activeDatabase.open, true);
+  activeDatabase.close();
+});
+
+test('SQLite backup can be imported without replacing the active connection', async (t) => {
+  const folder = fs.mkdtempSync(path.join(os.tmpdir(), 'school-backup-import-'));
+  t.after(() => fs.rmSync(folder, { recursive: true, force: true }));
+  const activePath = path.join(folder, 'active.sqlite');
+  const backupPath = path.join(folder, 'backup.sqlite');
+  const activeDatabase = createSchoolDatabase(activePath, 'Current student');
+  const backupDatabase = createSchoolDatabase(backupPath, 'Imported student');
+  backupDatabase.close();
+
+  assert.deepEqual(restoreSqliteBackup(activeDatabase, backupPath), { restored: true });
+  assert.equal(activeDatabase.prepare('SELECT full_name FROM students').get().full_name, 'Imported student');
   assert.equal(activeDatabase.open, true);
   activeDatabase.close();
 });
