@@ -309,13 +309,20 @@ function renderAdmissionApplications() {
 }
 
 async function openAdmissionPdf(applicationId) {
-  const response = await fetch(`/api/admin/admissions/${applicationId}/pdf`, { headers: { Authorization: `Bearer ${token}` } });
-  if (!response.ok) {
-    const data = await response.json();
-    return alert(data.message || 'Could not open admission PDF.');
+  const pdfWindow = window.open('about:blank', '_blank');
+  try {
+    const response = await fetch(`/api/admin/admissions/${applicationId}/pdf`, { headers: { Authorization: `Bearer ${token}` } });
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.message || 'Could not open admission PDF.');
+    }
+    const fileUrl = URL.createObjectURL(await response.blob());
+    if (pdfWindow) pdfWindow.location.href = fileUrl;
+    else window.location.href = fileUrl;
+  } catch (error) {
+    if (pdfWindow) pdfWindow.close();
+    alert(error.message || 'Could not open admission PDF.');
   }
-  const fileUrl = URL.createObjectURL(await response.blob());
-  window.open(fileUrl, '_blank');
 }
 
 document.getElementById('admissions-table-body').addEventListener('click', (event) => {

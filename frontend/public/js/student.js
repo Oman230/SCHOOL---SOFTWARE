@@ -415,16 +415,21 @@ async function loadAnnouncements() {
   }
 }
 
-// Opens the report's PDF in a new browser tab so the student can view/print it.
-// We can't just link to the URL normally because the endpoint requires the auth
-// token — so we fetch it as a file (blob) first, then open that.
+// Open the tab during the tap; Safari blocks tabs opened after an async fetch.
 async function printReport(reportId) {
-  const response = await fetch(`/api/reports/${reportId}/pdf`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const blob = await response.blob();          // the raw PDF file data
-  const fileUrl = URL.createObjectURL(blob);    // a temporary URL the browser can open
-  window.open(fileUrl, '_blank');               // opens in a new tab, where the browser's own PDF viewer can print it
+  const pdfWindow = window.open('about:blank', '_blank');
+  try {
+    const response = await fetch(`/api/reports/${reportId}/pdf`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) throw new Error('Could not open report PDF.');
+    const fileUrl = URL.createObjectURL(await response.blob());
+    if (pdfWindow) pdfWindow.location.href = fileUrl;
+    else window.location.href = fileUrl;
+  } catch (error) {
+    if (pdfWindow) pdfWindow.close();
+    alert(error.message || 'Could not open report PDF.');
+  }
 }
 
 // ---------------------- PAY FEES (Paystack) ----------------------
