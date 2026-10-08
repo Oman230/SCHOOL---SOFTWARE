@@ -488,6 +488,11 @@ button {
   border: 1px solid rgba(255, 255, 255, 0.16);
 }
 
+#fees-section .fee-statement-link {
+  margin-left: 8px;
+  color: #fff;
+}
+
 #database-backup-panel .btn-outline,
 #cloud-sync-panel .btn-outline {
   position: relative;
