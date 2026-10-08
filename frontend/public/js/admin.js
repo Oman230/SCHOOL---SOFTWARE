@@ -718,8 +718,8 @@ async function loadStudents() {
         <td>${trendMarkup}</td>
         <td>
           <button class="btn btn-outline" type="button" style="padding:5px 10px;font-size:0.8rem;color:var(--color-primary);border-color:rgba(79,70,229,0.2);" data-action="edit-student" data-id="${s.id}">Edit</button>
-          <a class="btn btn-accent" style="padding:5px 10px;font-size:0.8rem;margin-left:8px;" href="/fee-statement.html?studentId=${encodeURIComponent(s.id)}" target="_blank" rel="noopener">Fees</a>
-          <button class="btn btn-accent" type="button" style="padding:5px 10px;font-size:0.8rem;margin-left:8px;" data-action="print-student-id" data-id="${s.id}">Print ID</button>
+          <a class="btn btn-accent" style="padding:5px 10px;font-size:0.8rem;margin-left:8px;" href="/fee-statement.html?studentId=${encodeURIComponent(s.id)}">Fees</a>
+          <a class="btn btn-accent" style="padding:5px 10px;font-size:0.8rem;margin-left:8px;" href="/student-id-card.html?studentId=${encodeURIComponent(s.id)}" target="_blank" rel="noopener noreferrer">Print ID</a>
           <button class="btn btn-outline" type="button" style="padding:5px 10px;font-size:0.8rem;color:var(--color-danger);border-color:var(--color-danger);margin-left:8px;" onclick="deleteStudent(${s.id})">Delete</button>
         </td>
       </tr>`;
@@ -748,12 +748,6 @@ document.getElementById('students-table-body').addEventListener('click', async (
   if (action === 'cancel-student') {
     studentEditId = null;
     loadStudents();
-    return;
-  }
-
-  if (action === 'print-student-id') {
-    const student = (await apiGet('/api/admin/students')).find((item) => Number(item.id) === studentId);
-    if (student) printStudentId(student);
     return;
   }
 
@@ -844,26 +838,6 @@ document.getElementById('student-form').addEventListener('submit', async (event)
   loadStats();
   alert(`Student added. Generated ID: ${data.student_id_number}`);
 });
-
-function printStudentId(student) {
-  const printWindow = window.open('', '_blank', 'width=420,height=720');
-  if (!printWindow) {
-    alert('Please allow pop-ups to print the student ID.');
-    return;
-  }
-
-  const photo = student.photo_url || '/assets/logo.png';
-  const safePhoto = escapeHtml(photo);
-  const safeName = escapeHtml(student.full_name || '-');
-  const safeId = escapeHtml(student.student_id_number || '-');
-  const safeClass = escapeHtml(student.classroom_name || '-');
-  const safeLevel = escapeHtml(student.classroom_level || '-');
-
-  printWindow.document.write(`<!doctype html><html><head><title>Student ID - ${safeName}</title><style>
-    @page{size:auto;margin:10mm}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:#172033}.card{position:relative;width:54mm;height:86mm;overflow:hidden;border:1px solid #263d85;border-radius:1mm;background:#fff}.topline{height:3mm;background:#304b9d}.wave{position:absolute;left:-12mm;width:78mm;border-radius:50%;pointer-events:none}.wave-one{top:7mm;height:25mm;background:#304b9d}.wave-two{top:19mm;height:27mm;background:#0878bb}.wave-three{top:30mm;height:24mm;background:#28a4d8}.header{position:relative;z-index:2;display:flex;align-items:center;flex-direction:column;gap:2mm;padding:5mm 4mm 0;color:#fff;text-align:center}.mark{display:grid;width:12mm;height:12mm;place-items:center;border:.7mm solid #fff;border-radius:50%;color:#fff;font-size:19px;font-weight:500}.header strong{font-size:8.5px;letter-spacing:.02em}.body{position:relative;z-index:3;display:flex;align-items:center;flex-direction:column;gap:2mm;padding:7mm 5mm 0;text-align:center}.body img{width:34mm;height:34mm;object-fit:cover;border:2mm solid #29a5d9;border-radius:50%;background:#dbeafe;box-shadow:0 0 0 1.2mm #fff,0 3px 8px rgba(23,37,84,.14)}.details{display:grid;width:100%;gap:.8mm;justify-items:center}.label{color:#64748b;font-size:6.5px;font-weight:800;letter-spacing:.08em}.details strong{overflow-wrap:anywhere;color:#0878bb;font-size:16px;line-height:1.05}.role{color:#29a5d9;font-size:10px}.number-badge{width:34mm;margin-top:1mm;padding:1.2mm 3mm;border-radius:1.5mm;background:#e0f2fe;border:.3mm solid #7dd3fc}.number-badge .label,.number-badge strong{display:block}.number-badge strong{color:#172554;font-size:10px;letter-spacing:.04em}.meta{display:grid;grid-template-columns:1fr 1fr;gap:4mm;margin-top:2mm}.meta span,.meta strong{display:block}.signature{position:absolute;z-index:4;bottom:12mm;left:0;width:100%;color:#172033;font-family:cursive;font-size:11px;text-align:center}.footer{position:absolute;z-index:3;right:0;bottom:0;left:0;display:flex;align-items:center;justify-content:space-between;padding:2mm 4mm;background:#304b9d;color:#fff;font-size:6px}.footer strong{letter-spacing:.08em}.footer i{font-style:normal;color:#fef3c7}
-  </style></head><body><div class="card"><div class="topline"></div><div class="wave wave-one"></div><div class="wave wave-two"></div><div class="wave wave-three"></div><div class="header"><div class="mark">U</div><strong>SUNRISE INTERNATIONAL SCHOOL</strong></div><div class="body"><img src="${safePhoto}" alt="Student ID photo"><div class="details"><span class="label">STUDENT</span><strong>${safeName}</strong><span class="role">Student</span><div class="number-badge"><span class="label">ID NUMBER</span><strong>${safeId}</strong></div><div class="meta"><div><span class="label">CLASS</span><strong>${safeClass}</strong></div><div><span class="label">LEVEL</span><strong>${safeLevel}</strong></div></div></div></div><div class="signature">________________</div><div class="footer"><span>Official student identification</span><strong>VALID <i>${new Date().getFullYear()}</i></strong></div></div><script>window.onload=function(){window.print()}<\/script></body></html>`);
-  printWindow.document.close();
-}
 
 async function deleteStudent(id) {
   if (!confirm('Delete this student account? This also deletes their reports and payment history.')) return;
