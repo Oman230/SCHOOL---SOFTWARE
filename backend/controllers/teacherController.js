@@ -3,6 +3,8 @@
 // and fill in / update terminal (exam) reports for their students.
 
 const pool = require('../config/db');
+const { generateStudentId } = require('../security/studentIds');
+const { proficiencyForScore } = require('./proficiency');
 
 function isValidImageDataUrl(value) {
   if (typeof value !== 'string') {
@@ -56,17 +58,6 @@ function normalizePhotoUrl(photoUrl) {
     return null;
   }
   return photoUrl.trim();
-}
-
-// Converts a total score (0-100) into a simple letter grade (A, B, C, D, E, F) —
-// the standard, easy-to-read format most schools use on report cards.
-function scoreToGrade(total) {
-  if (total >= 80) return { grade: 'A', remark: 'Excellent' };
-  if (total >= 70) return { grade: 'B', remark: 'Very Good' };
-  if (total >= 60) return { grade: 'C', remark: 'Good' };
-  if (total >= 50) return { grade: 'D', remark: 'Credit' };
-  if (total >= 40) return { grade: 'E', remark: 'Pass' };
-  return { grade: 'F', remark: 'Fail' };
 }
 
 // ---------------------------------------------------------------
@@ -193,7 +184,8 @@ async function getPublicTeachers(req, res) {
 //
 // Expected request body:
 // {
-//   studentId, academicYear, term, classTeacherRemark, headteacherRemark, attendance,
+//   studentId, academicYear, term, classTeacherRemark, promotionStatus,
+//   attitudeValuesCompetencies, promotedTo, attendance,
 //   scores: [ { subjectId, classScore, examScore }, ... ]
 // }
 // ---------------------------------------------------------------
@@ -209,45 +201,106 @@ async function saveReport(req, res) {
       academicYear,
       term,
       classTeacherRemark,
-      headteacherRemark,
+      promotionStatus,
+      attitudeValuesCompetencies,
       attendance,
+      promotedTo,
       scores, // array of { subjectId, classScore, examScore }
     } = req.body;
 
-    if (!studentId || !academicYear || !term || !Array.isArray(scores)) {
+    if (!studentId || !academicYear || !term || !Array.isArray(scores)
+      || !['Promoted', 'To be promoted'].includes(promotionStatus)
+      || !String(classTeacherRemark || '').trim()
+      || !String(attitudeValuesCompetencies || '').trim()) {
       return res.status(400).json({ message: 'Missing required report fields.' });
+    }
+    if (!scores.length || scores.some((score) => (
+      !Number.isFinite(Number(score.classScore))
+      || !Number.isFinite(Number(score.examScore))
+      || Number(score.classScore) < 0
+      || Number(score.classScore) > 50
+      || Number(score.examScore) < 0
+      || Number(score.examScore) > 50
+    ))) {
+      return res.status(400).json({ message: 'Each subject must have SBA and exam scores between 0 and 50.' });
+    }
+
+    const assignmentResult = await pool.query(
+      `SELECT s.classroom_id, c.name AS current_classroom_name,
+              t.classroom_id AS teacher_classroom_id
+       FROM students s
+       CROSS JOIN teachers t
+       LEFT JOIN classrooms c ON c.id = s.classroom_id
+       WHERE s.id = $1 AND t.id = $2`,
+      [studentId, teacherId]
+    );
+    if (!assignmentResult.rows.length) {
+      return res.status(404).json({ message: 'Student or teacher account not found.' });
+    }
+    if (!assignmentResult.rows[0].teacher_classroom_id
+      || Number(assignmentResult.rows[0].classroom_id) !== Number(assignmentResult.rows[0].teacher_classroom_id)) {
+      return res.status(403).json({ message: 'You can only submit reports for students in your assigned class.' });
+    }
+
+    const promotedClassName = String(promotedTo || '').trim();
+    if (promotionStatus === 'Promoted' && !promotedClassName) {
+      return res.status(400).json({ message: 'Choose a destination classroom for a promoted student.' });
+    }
+    let promotedClassroomId = null;
+    if (promotedClassName) {
+      const classroomResult = await pool.query(
+        'SELECT id FROM classrooms WHERE LOWER(name) = LOWER($1) LIMIT 1',
+        [promotedClassName]
+      );
+      if (!classroomResult.rows.length) {
+        return res.status(400).json({ message: 'Choose an existing classroom as the promotion destination.' });
+      }
+      promotedClassroomId = classroomResult.rows[0].id;
     }
 
     await client.query('BEGIN'); // start the transaction
 
     // Insert the report, or if one already exists for this student/year/term, update it instead
     const reportResult = await client.query(
-      `INSERT INTO reports (student_id, teacher_id, academic_year, term, class_teacher_remark, headteacher_remark, attendance)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO reports (student_id, teacher_id, academic_year, term, class_teacher_remark, headteacher_remark, attendance, promoted_to, classroom_name, promotion_status, attitude_values_competencies)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        ON CONFLICT (student_id, academic_year, term)
-       DO UPDATE SET class_teacher_remark = $5, headteacher_remark = $6, attendance = $7, teacher_id = $2
+       DO UPDATE SET class_teacher_remark = $5, headteacher_remark = $6, attendance = $7, teacher_id = $2, promoted_to = $8, classroom_name = $9, promotion_status = $10, attitude_values_competencies = $11
        RETURNING id`,
-      [studentId, teacherId, academicYear, term, classTeacherRemark, headteacherRemark, attendance]
+      [
+        studentId, teacherId, academicYear, term, classTeacherRemark.trim(), promotionStatus,
+        attendance, promotedClassName || null, assignmentResult.rows[0].current_classroom_name || null,
+        promotionStatus, attitudeValuesCompetencies.trim(),
+      ]
     );
     const reportId = reportResult.rows[0].id;
 
     // Insert/update each subject's score
     for (const score of scores) {
       const total = Number(score.classScore) + Number(score.examScore);
-      const { grade, remark } = scoreToGrade(total); // auto-calculate grade + remark
+      const { level, remark } = proficiencyForScore(total);
 
       await client.query(
         `INSERT INTO report_scores (report_id, subject_id, class_score, exam_score, grade, subject_remark)
          VALUES ($1, $2, $3, $4, $5, $6)
          ON CONFLICT (report_id, subject_id)
          DO UPDATE SET class_score = $3, exam_score = $4, grade = $5, subject_remark = $6`,
-        [reportId, score.subjectId, score.classScore, score.examScore, grade, remark]
+        [reportId, score.subjectId, score.classScore, score.examScore, level, remark]
       );
+    }
+
+    if (promotionStatus === 'Promoted' && promotedClassroomId) {
+      await client.query('UPDATE students SET classroom_id = $1 WHERE id = $2', [promotedClassroomId, studentId]);
     }
 
     await client.query('COMMIT'); // save all the changes together
 
-    res.json({ message: 'Report saved successfully.', reportId });
+    res.json({
+      message: promotionStatus === 'Promoted' ? `Report saved and student promoted to ${promotedClassName}.` : 'Report saved. Student is marked to be promoted.',
+      reportId,
+      promotedTo: promotedClassName || null,
+      promotionStatus,
+    });
   } catch (error) {
     await client.query('ROLLBACK'); // undo everything if any step failed
     console.error('Save report error:', error);
@@ -338,7 +391,6 @@ async function createStudentForTeacher(req, res) {
   try {
     const teacherId = req.user.id;
     const {
-      studentIdNumber,
       fullName,
       email,
       password,
@@ -351,8 +403,8 @@ async function createStudentForTeacher(req, res) {
       parentPhone,
     } = req.body;
 
-    if (!studentIdNumber || !fullName || !password) {
-      return res.status(400).json({ message: 'Student ID, full name, and password are required.' });
+    if (!fullName || !password) {
+      return res.status(400).json({ message: 'Student full name and password are required.' });
     }
 
     const normalizedParentEmail = String(parentEmail || '').trim().toLowerCase();
@@ -371,6 +423,7 @@ async function createStudentForTeacher(req, res) {
     const passwordError = validatePassword(password);
     if (passwordError) return res.status(400).json({ message: passwordError });
     const passwordHash = await hashPassword(password);
+    const studentIdNumber = await generateStudentId(pool);
     const studentResult = await pool.query(
       `INSERT INTO students (
         student_id_number, full_name, email, password_hash, date_of_birth,
@@ -395,7 +448,7 @@ async function createStudentForTeacher(req, res) {
     res.status(201).json(studentResult.rows[0]);
   } catch (error) {
     if (error.code === '23505') {
-      return res.status(400).json({ message: 'A student with that ID number or email already exists.' });
+      return res.status(400).json({ message: 'A student with that email already exists or the generated ID could not be reserved.' });
     }
     console.error('Create teacher-managed student error:', error);
     res.status(500).json({ message: 'Could not add student to your class.' });
@@ -492,7 +545,7 @@ module.exports = {
   getAllSubjects,
   getPublicTeachers,
   saveReport,
-  scoreToGrade,
+  proficiencyForScore,
   getStudentReports,
   createStudentForTeacher,
   deleteStudentForTeacher,

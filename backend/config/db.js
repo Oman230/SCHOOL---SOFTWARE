@@ -29,6 +29,13 @@ if (usePostgres) {
     end: () => pool.end(),
     schemaReady: async () => {
       await pool.query('SELECT 1 FROM admins LIMIT 0');
+      await pool.query('CREATE TABLE IF NOT EXISTS student_id_sequences (year INTEGER PRIMARY KEY, last_number INTEGER NOT NULL)');
+      await pool.query('ALTER TABLE payments ADD COLUMN IF NOT EXISTS academic_year VARCHAR(20)');
+      await pool.query('ALTER TABLE payments ADD COLUMN IF NOT EXISTS classroom_name VARCHAR(100)');
+      await pool.query("ALTER TABLE payments ADD COLUMN IF NOT EXISTS payment_method VARCHAR(20) NOT NULL DEFAULT 'paystack'");
+      await pool.query('ALTER TABLE reports ADD COLUMN IF NOT EXISTS classroom_name VARCHAR(100)');
+      await pool.query('ALTER TABLE reports ADD COLUMN IF NOT EXISTS promotion_status VARCHAR(30)');
+      await pool.query('ALTER TABLE reports ADD COLUMN IF NOT EXISTS attitude_values_competencies TEXT');
     },
     database: null,
     databasePath: null,
@@ -44,6 +51,26 @@ if (usePostgres) {
   database.pragma('foreign_keys = ON');
   const schemaPath = path.join(__dirname, '..', 'database', 'schema.sqlite.sql');
   database.exec(fs.readFileSync(schemaPath, 'utf8'));
+  const paymentColumns = new Set(database.prepare('PRAGMA table_info(payments)').all().map((column) => column.name));
+  if (!paymentColumns.has('academic_year')) {
+    database.exec('ALTER TABLE payments ADD COLUMN academic_year TEXT');
+  }
+  if (!paymentColumns.has('classroom_name')) {
+    database.exec('ALTER TABLE payments ADD COLUMN classroom_name TEXT');
+  }
+  if (!paymentColumns.has('payment_method')) {
+    database.exec("ALTER TABLE payments ADD COLUMN payment_method TEXT NOT NULL DEFAULT 'paystack'");
+  }
+  const reportColumns = new Set(database.prepare('PRAGMA table_info(reports)').all().map((column) => column.name));
+  if (!reportColumns.has('classroom_name')) {
+    database.exec('ALTER TABLE reports ADD COLUMN classroom_name TEXT');
+  }
+  if (!reportColumns.has('promotion_status')) {
+    database.exec('ALTER TABLE reports ADD COLUMN promotion_status TEXT');
+  }
+  if (!reportColumns.has('attitude_values_competencies')) {
+    database.exec('ALTER TABLE reports ADD COLUMN attitude_values_competencies TEXT');
+  }
 
   function normalizeValue(value) {
     if (typeof value === 'boolean') return Number(value);

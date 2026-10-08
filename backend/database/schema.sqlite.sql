@@ -63,6 +63,11 @@ CREATE TABLE IF NOT EXISTS students (
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS student_id_sequences (
+  year INTEGER PRIMARY KEY,
+  last_number INTEGER NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS attendance_records (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
@@ -118,6 +123,9 @@ CREATE TABLE IF NOT EXISTS reports (
   headteacher_remark TEXT,
   attendance TEXT,
   promoted_to TEXT,
+  classroom_name TEXT,
+  promotion_status TEXT,
+  attitude_values_competencies TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP,
   UNIQUE (student_id, academic_year, term)
 );
@@ -141,6 +149,9 @@ CREATE TABLE IF NOT EXISTS payments (
   amount NUMERIC NOT NULL,
   paystack_reference TEXT UNIQUE NOT NULL,
   status TEXT DEFAULT 'pending',
+  payment_method TEXT NOT NULL DEFAULT 'paystack',
+  academic_year TEXT,
+  classroom_name TEXT,
   paid_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 

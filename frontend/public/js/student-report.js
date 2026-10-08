@@ -6,13 +6,12 @@ function setText(id, value) {
   document.getElementById(id).textContent = value || '-';
 }
 
-function gradeForAverage(average) {
-  if (average >= 80) return 'A';
-  if (average >= 70) return 'B';
-  if (average >= 60) return 'C';
-  if (average >= 50) return 'D';
-  if (average >= 40) return 'E';
-  return 'F';
+function proficiencyForScore(score) {
+  if (score >= 80) return { level: 'L1', name: 'Highly Proficient / Advanced', remark: 'Excellent performance. Keep it up. Shows high understanding.' };
+  if (score >= 65) return { level: 'L2', name: 'Proficient', remark: 'Very good performance. Could achieve more with little effort.' };
+  if (score >= 50) return { level: 'L3', name: 'Approaching Proficiency', remark: 'Good effort shown. Needs improvement.' };
+  if (score >= 35) return { level: 'L4', name: 'Developing', remark: 'Developing interest. Requires intensive support.' };
+  return { level: 'L5-L6', name: 'Below Standard / Beginning', remark: 'Developing interest. Requires intensive support.' };
 }
 
 function formatDate(value) {
@@ -28,14 +27,15 @@ function appendScoreRow(score) {
     Number(score.class_score || 0).toFixed(2),
     Number(score.exam_score || 0).toFixed(2),
     Number(score.total_score || 0).toFixed(2),
-    (score.grade || '-').toUpperCase(),
-    score.subject_remark || '-',
+    proficiencyForScore(Number(score.total_score || 0)).level,
+    proficiencyForScore(Number(score.total_score || 0)).remark,
   ];
 
   values.forEach((value, index) => {
     const cell = document.createElement('td');
     cell.textContent = value;
-    if (index === 4) cell.className = 'grade-cell';
+    if (index === 4) cell.className = 'proficiency-cell';
+    if (index === 5) cell.className = 'teacher-remark-cell';
     row.appendChild(cell);
   });
   document.getElementById('score-rows').appendChild(row);
@@ -60,14 +60,17 @@ function showReport(report) {
   setText('teacher-name', report.teacher_name);
   setText('report-period', `${report.term || 'Term'} | ${report.academic_year || ''}`);
   setText('class-remark', report.class_teacher_remark);
-  setText('head-remark', report.headteacher_remark);
+  setText('head-remark', report.promotion_status || report.headteacher_remark);
+  setText('promotion-destination', report.promoted_to);
+  setText('attitude-values-competencies', report.attitude_values_competencies);
   setText('report-issue', `${report.term || 'Term'} ${report.academic_year || ''} | Official student academic record`);
   initialsElement.textContent = initials || 'ST';
 
   const average = scores.length
     ? scores.reduce((total, score) => total + Number(score.total_score || 0), 0) / scores.length
     : 0;
-  setText('overall-grade', gradeForAverage(average));
+  const overallProficiency = proficiencyForScore(average);
+  setText('overall-grade', `${overallProficiency.level} — ${overallProficiency.name}`);
   setText('overall-average', `${average.toFixed(2)}%`);
   setText('subject-count', String(scores.length));
 

@@ -711,7 +711,8 @@ async function loadStudents() {
         <td>${trendMarkup}</td>
         <td>
           <button class="btn btn-outline" type="button" style="padding:5px 10px;font-size:0.8rem;color:var(--color-primary);border-color:rgba(79,70,229,0.2);" data-action="edit-student" data-id="${s.id}">Edit</button>
-            <button class="btn btn-accent" type="button" style="padding:5px 10px;font-size:0.8rem;margin-left:8px;" data-action="print-student-id" data-id="${s.id}">Print ID</button>
+          <a class="btn btn-accent" style="padding:5px 10px;font-size:0.8rem;margin-left:8px;" href="/fee-statement.html?studentId=${encodeURIComponent(s.id)}" target="_blank" rel="noopener">Fees</a>
+          <button class="btn btn-accent" type="button" style="padding:5px 10px;font-size:0.8rem;margin-left:8px;" data-action="print-student-id" data-id="${s.id}">Print ID</button>
           <button class="btn btn-outline" type="button" style="padding:5px 10px;font-size:0.8rem;color:var(--color-danger);border-color:var(--color-danger);margin-left:8px;" onclick="deleteStudent(${s.id})">Delete</button>
         </td>
       </tr>`;
@@ -807,7 +808,6 @@ document.getElementById('student-form').addEventListener('submit', async (event)
   }
 
   const payload = {
-    studentIdNumber: document.getElementById('studentIdNumber').value.trim(),
     fullName: document.getElementById('studentFullName').value.trim(),
     email: document.getElementById('studentEmail').value.trim(),
     parentName: document.getElementById('studentParentName').value.trim(),
@@ -826,6 +826,7 @@ document.getElementById('student-form').addEventListener('submit', async (event)
   event.target.reset();
   loadStudents();
   loadStats();
+  alert(`Student added. Generated ID: ${data.student_id_number}`);
 });
 
 function printStudentId(student) {
@@ -983,7 +984,7 @@ async function searchStudents(query) {
   const trimmedQuery = query.trim();
 
   if (!trimmedQuery) {
-    resultsTable.innerHTML = '<tr><td colspan="6">Start typing to search students.</td></tr>';
+    resultsTable.innerHTML = '<tr><td colspan="7">Start typing to search students.</td></tr>';
     return;
   }
 
@@ -991,7 +992,7 @@ async function searchStudents(query) {
   const matches = students.filter((student) => student.full_name.toLowerCase().includes(trimmedQuery.toLowerCase()));
 
   if (!matches.length) {
-    resultsTable.innerHTML = '<tr><td colspan="6">No student matches your search.</td></tr>';
+    resultsTable.innerHTML = '<tr><td colspan="7">No student matches your search.</td></tr>';
     return;
   }
 
@@ -999,17 +1000,51 @@ async function searchStudents(query) {
     const trendMarkup = await getStudentTrend(student.id);
     return `
       <tr>
-        <td>${student.student_id_number}</td>
-        <td>${student.full_name}</td>
-        <td>${student.classroom_name || '-'}</td>
+        <td>${escapeHtml(student.student_id_number)}</td>
+        <td>${escapeHtml(student.full_name)}</td>
+        <td>${escapeHtml(student.classroom_name || '-')}</td>
         <td>${Number(student.total_fees_due).toFixed(2)}</td>
         <td>${Number(student.amount_paid).toFixed(2)}</td>
         <td>${trendMarkup}</td>
+        <td>
+          <div class="cash-payment-entry">
+            <input type="number" min="0.01" step="0.01" inputmode="decimal" data-cash-amount="${student.id}" aria-label="Cash payment amount for ${escapeHtml(student.full_name)}" placeholder="Amount (GHS)" />
+            <button class="btn btn-primary" type="button" data-action="record-cash-payment" data-id="${student.id}" style="padding:8px 10px;font-size:0.8rem;">Record cash</button>
+          </div>
+        </td>
       </tr>`;
   }));
 
   resultsTable.innerHTML = rows.join('');
 }
+
+document.getElementById('student-search-results').addEventListener('click', async (event) => {
+  const button = event.target.closest('[data-action="record-cash-payment"]');
+  if (!button) return;
+
+  const studentId = button.dataset.id;
+  const amountInput = button.closest('tr').querySelector('[data-cash-amount]');
+  const amount = Number(amountInput?.value);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    alert('Enter a cash payment greater than zero.');
+    amountInput?.focus();
+    return;
+  }
+
+  button.disabled = true;
+  const { ok, data } = await apiSend('POST', `/api/admin/students/${encodeURIComponent(studentId)}/cash-payments`, { amount });
+  if (!ok) {
+    button.disabled = false;
+    alert(data.message || 'Could not record cash payment.');
+    return;
+  }
+
+  alert(data.message);
+  await Promise.all([
+    loadStats(),
+    searchStudents(document.getElementById('admin-student-search').value),
+  ]);
+});
 
 document.getElementById('admin-student-search').addEventListener('input', (event) => {
   searchStudents(event.target.value);

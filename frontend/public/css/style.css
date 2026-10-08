@@ -1429,14 +1429,64 @@ form {
   min-height: 100vh;
 }
 
+body.dashboard-page {
+  animation: none;
+  overflow-x: clip;
+}
+
 .sidebar {
   width: 270px;
   background: linear-gradient(180deg, #111827, #1f2937);
   color: #fff;
   padding: 24px 18px;
   flex-shrink: 0;
-  position: relative;
-  overflow: hidden;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  z-index: 20;
+}
+
+.dashboard-page .sidebar::before,
+.dashboard-page .main-content::before,
+.dashboard-page .stat-box,
+.dashboard-page .card::after,
+.dashboard-page .stat-box::after,
+.dashboard-page .status-pill::before {
+  animation: none;
+}
+
+.student-id-hint {
+  align-self: center;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+
+.report-framework-note {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border-left: 4px solid #facc15;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #172554;
+  font-weight: 700;
+}
+
+.cash-payment-entry {
+  display: flex;
+  min-width: 210px;
+  align-items: center;
+  gap: 8px;
+}
+
+.cash-payment-entry input {
+  width: 120px;
+  min-width: 0;
+  padding: 8px 9px;
+  border: 1px solid rgba(79, 70, 229, 0.18);
+  border-radius: 8px;
 }
 
 .sidebar::before {
@@ -2013,8 +2063,11 @@ table tbody tr:hover {
     width: 100%;
     display: flex;
     overflow-x: auto;
+    overflow-y: hidden;
     gap: 8px;
     padding: 14px 10px;
+    height: auto;
+    align-self: stretch;
   }
 
   .sidebar .brand {
@@ -2023,6 +2076,10 @@ table tbody tr:hover {
 
   .sidebar a {
     white-space: nowrap;
+  }
+
+  .dashboard-page [id$="-section"] {
+    scroll-margin-top: 76px;
   }
 
   .main-content {

@@ -5,6 +5,7 @@
 
 const pool = require('../config/db');
 const PDFDocument = require('pdfkit'); // library that draws PDF documents
+const { proficiencyForScore } = require('./proficiency');
 require('dotenv').config();
 
 // ---------------------------------------------------------------
@@ -17,7 +18,7 @@ async function fetchFullReport(reportId, viewer) {
         `SELECT r.*, s.full_name AS student_name, s.student_id_number,
           s.photo_url AS student_photo_url, s.date_of_birth AS student_date_of_birth,
           s.gender AS student_gender,
-            c.name AS classroom_name, c.level AS classroom_level,
+            COALESCE(r.classroom_name, c.name) AS classroom_name, c.level AS classroom_level,
             t.full_name AS teacher_name
      FROM reports r
      JOIN students s ON r.student_id = s.id
@@ -29,7 +30,8 @@ async function fetchFullReport(reportId, viewer) {
          OR ($2 = 'student' AND s.id = $3)
          OR ($2 = 'teacher' AND EXISTS (
            SELECT 1 FROM teachers viewer_teacher
-           WHERE viewer_teacher.id = $3 AND viewer_teacher.classroom_id = s.classroom_id
+           WHERE viewer_teacher.id = $3
+             AND (viewer_teacher.classroom_id = s.classroom_id OR r.teacher_id = viewer_teacher.id)
          ))
        )`,
     [reportId, viewer?.role || '', viewer?.id || null]
@@ -134,55 +136,72 @@ async function getReportPdf(req, res) {
 
     const totalScores = report.scores.map((score) => Number(score.total_score));
     const average = totalScores.length ? totalScores.reduce((a, b) => a + b, 0) / totalScores.length : 0;
+    const overallProficiency = proficiencyForScore(average);
     const tableTop = 302;
     const columns = [
-      { label: 'SUBJECT', x: 56, width: 174 },
-      { label: 'CLASS', x: 236, width: 58 },
-      { label: 'EXAM', x: 300, width: 58 },
-      { label: 'TOTAL', x: 364, width: 58 },
-      { label: 'GRADE', x: 428, width: 58 },
-      { label: 'REMARK', x: 492, width: 55 },
+      { label: 'SUBJECT', x: 56, width: 114 },
+      { label: 'SBA / 50', x: 174, width: 44 },
+      { label: 'EXAM / 50', x: 222, width: 48 },
+      { label: 'FINAL / 100', x: 274, width: 48 },
+      { label: 'LEVEL', x: 326, width: 66 },
+      { label: 'TEACHER REMARK', x: 398, width: 145 },
     ];
 
+    doc.fillColor(colors.ink).font('Helvetica-Bold').fontSize(8)
+      .text('School-Based Assessment (SBA) 50% + End-of-Term Exam 50% = Final Score 100%', left, 285, { width, align: 'center' });
     doc.roundedRect(left, tableTop, width, 29, 7).fill(colors.blue);
-    doc.fillColor(colors.white).font('Helvetica-Bold').fontSize(7);
-    columns.forEach((column) => doc.text(column.label, column.x, tableTop + 10, { width: column.width, align: column.label === 'SUBJECT' || column.label === 'REMARK' ? 'left' : 'center' }));
+    doc.fillColor(colors.white).font('Helvetica-Bold').fontSize(6.5);
+    columns.forEach((column) => doc.text(column.label, column.x, tableTop + 10, {
+      width: column.width,
+      align: column.label === 'SUBJECT' || column.label === 'TEACHER REMARK' ? 'left' : 'center',
+    }));
 
     let rowY = tableTop + 29;
     report.scores.forEach((score, index) => {
-      const rowHeight = 27;
+      const rowHeight = 31;
+      const proficiency = proficiencyForScore(Number(score.total_score || 0));
       doc.rect(left, rowY, width, rowHeight).fill(index % 2 === 0 ? colors.white : colors.pale);
-      doc.fillColor(colors.ink).font('Helvetica').fontSize(8.5);
-      doc.text(score.subject_name || '-', 56, rowY + 9, { width: 174, ellipsis: true });
-      doc.text(Number(score.class_score || 0).toFixed(1), 236, rowY + 9, { width: 58, align: 'center' });
-      doc.text(Number(score.exam_score || 0).toFixed(1), 300, rowY + 9, { width: 58, align: 'center' });
-      doc.font('Helvetica-Bold').text(Number(score.total_score || 0).toFixed(1), 364, rowY + 9, { width: 58, align: 'center' });
-      doc.fillColor(colors.teal).text(score.grade || '-', 428, rowY + 9, { width: 58, align: 'center' });
-      doc.fillColor(colors.muted).font('Helvetica').fontSize(7.5).text(score.subject_remark || '-', 492, rowY + 9, { width: 55, ellipsis: true });
+      doc.fillColor(colors.ink).font('Helvetica').fontSize(8);
+      doc.text(score.subject_name || '-', 56, rowY + 9, { width: 114, ellipsis: true });
+      doc.text(Number(score.class_score || 0).toFixed(1), 174, rowY + 9, { width: 44, align: 'center' });
+      doc.text(Number(score.exam_score || 0).toFixed(1), 222, rowY + 9, { width: 48, align: 'center' });
+      doc.font('Helvetica-Bold').text(Number(score.total_score || 0).toFixed(1), 274, rowY + 9, { width: 48, align: 'center' });
+      doc.fillColor(colors.teal).font('Helvetica-Bold').fontSize(7).text(proficiency.level, 326, rowY + 9, { width: 66, align: 'center' });
+      doc.fillColor(colors.muted).font('Helvetica').fontSize(6.5)
+        .text(proficiency.remark, 398, rowY + 5, { width: 145, height: rowHeight - 8, ellipsis: true });
       doc.strokeColor(colors.line).moveTo(left, rowY + rowHeight).lineTo(left + width, rowY + rowHeight).stroke();
       rowY += rowHeight;
     });
 
-    doc.roundedRect(left, rowY + 14, width, 54, 9).fill(colors.navy);
-    doc.fillColor('#cbd5e1').font('Helvetica-Bold').fontSize(8).text('OVERALL AVERAGE', 58, rowY + 29);
-    doc.fillColor(colors.white).font('Helvetica-Bold').fontSize(19).text(`${average.toFixed(1)}%`, 420, rowY + 25, { width: 105, align: 'right' });
-    rowY += 86;
+    doc.roundedRect(left, rowY + 10, width, 46, 9).fill(colors.navy);
+    doc.fillColor('#cbd5e1').font('Helvetica-Bold').fontSize(8)
+      .text(`OVERALL PROFICIENCY: ${overallProficiency.level} — ${overallProficiency.name}`, 58, rowY + 20, { width: 330 });
+    doc.fillColor(colors.white).font('Helvetica-Bold').fontSize(16)
+      .text(`${average.toFixed(1)}%`, 420, rowY + 18, { width: 105, align: 'right' });
+    rowY += 68;
 
     const remarkBox = (label, value, x, y, boxWidth) => {
-      doc.roundedRect(x, y, boxWidth, 66, 8).fill(colors.white).strokeColor(colors.line).stroke();
-      doc.fillColor(colors.blue).font('Helvetica-Bold').fontSize(8).text(label.toUpperCase(), x + 12, y + 11);
-      doc.fillColor(colors.ink).font('Helvetica').fontSize(8.5).text(value || '-', x + 12, y + 28, { width: boxWidth - 24, height: 28, ellipsis: true });
+      doc.roundedRect(x, y, boxWidth, 54, 8).fill(colors.white).strokeColor(colors.line).stroke();
+      doc.fillColor(colors.blue).font('Helvetica-Bold').fontSize(7).text(label.toUpperCase(), x + 10, y + 9);
+      doc.fillColor(colors.ink).font('Helvetica').fontSize(8)
+        .text(value || '-', x + 10, y + 22, { width: boxWidth - 20, height: 25, ellipsis: true });
     };
     remarkBox('Class teacher\'s remark', report.class_teacher_remark, left, rowY, 250);
-    remarkBox('Head teacher\'s remark', report.headteacher_remark, 305, rowY, 250);
-    rowY += 88;
-
-    doc.fillColor(colors.muted).font('Helvetica').fontSize(8).text('This report is issued by Sunrise International School for academic record purposes.', left, rowY);
-    doc.strokeColor(colors.line).moveTo(left, rowY + 24).lineTo(220, rowY + 24).stroke();
-    doc.moveTo(315, rowY + 24).lineTo(555, rowY + 24).stroke();
-    doc.fillColor(colors.muted).fontSize(8).text('Class Teacher\'s Signature', left, rowY + 31);
-    doc.text('Head Teacher\'s Signature', 315, rowY + 31);
-    doc.fillColor(colors.teal).font('Helvetica-Bold').fontSize(8).text('OFFICIAL SCHOOL REPORT', left, 811);
+    remarkBox('Attitude, values and core competencies', report.attitude_values_competencies, 305, rowY, 250);
+    rowY += 63;
+    doc.fillColor(colors.ink).font('Helvetica-Bold').fontSize(8)
+      .text(`Head Teacher's Decision: ${report.promotion_status || report.headteacher_remark || '-'}${report.promoted_to ? ` — Destination: ${report.promoted_to}` : ''}`, left, rowY, { width });
+    rowY += 17;
+    doc.fillColor(colors.muted).font('Helvetica').fontSize(6.5)
+      .text('L1: 80–100% Highly Proficient / Advanced  |  L2: 65–<80% Proficient  |  L3: 50–<65% Approaching Proficiency', left, rowY, { width });
+    rowY += 10;
+    doc.text('L4: 35–<50% Developing  |  L5–L6: 0–<35% Below Standard / Beginning', left, rowY, { width });
+    rowY += 11;
+    doc.strokeColor(colors.line).moveTo(left, rowY + 17).lineTo(220, rowY + 17).stroke();
+    doc.moveTo(315, rowY + 17).lineTo(555, rowY + 17).stroke();
+    doc.fillColor(colors.muted).fontSize(8).text('Class Teacher\'s Signature', left, rowY + 24);
+    doc.text('Head Teacher\'s Signature', 315, rowY + 24);
+    doc.fillColor(colors.teal).font('Helvetica-Bold').fontSize(8).text('PROFICIENCY-BASED SCHOOL REPORT', left, 811);
     doc.fillColor(colors.muted).font('Helvetica').text(new Date().getFullYear().toString(), 510, 811, { width: 45, align: 'right' });
 
     doc.end();

@@ -90,7 +90,10 @@ app.get('*', (req, res) => {
 // ---------------------- START SERVER ----------------------
 const DEFAULT_PORT = Number(process.env.PORT) || 5000;
 
-function startServer(port = DEFAULT_PORT, host) {
+async function startServer(port = DEFAULT_PORT, host) {
+  const pool = require('./config/db');
+  if (pool.driver === 'postgres') await pool.schemaReady();
+
   const keyPath = process.env.HTTPS_KEY_PATH;
   const certPath = process.env.HTTPS_CERT_PATH;
   const useHttps = Boolean(keyPath && certPath);

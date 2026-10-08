@@ -6,7 +6,7 @@
   <title>Admin Dashboard</title>
   <link rel="stylesheet" href="/css/style.css" />
 </head>
-<body>
+<body class="dashboard-page">
 
   <div class="dashboard">
     <aside class="sidebar">
@@ -15,6 +15,7 @@
       <a href="#classrooms-section">Classrooms</a>
       <a href="#teachers-section">Teachers</a>
       <a href="#students-section">Students</a>
+      <a href="/fee-statement.html">Fee Statements</a>
       <a href="#admissions-section">New Admissions</a>
       <a href="#" id="logout-link">Logout</a>
     </aside>
@@ -151,8 +152,8 @@
         </div>
         <div class="table-scroll" style="margin-top:18px;">
           <table>
-            <thead><tr><th>ID</th><th>Full Name</th><th>Classroom</th><th>Fees Due</th><th>Paid</th><th>Trend</th></tr></thead>
-            <tbody id="student-search-results"><tr><td colspan="6">Start typing to search students.</td></tr></tbody>
+            <thead><tr><th>ID</th><th>Full Name</th><th>Classroom</th><th>Fees Due</th><th>Paid</th><th>Trend</th><th>Record cash fees paid</th></tr></thead>
+            <tbody id="student-search-results"><tr><td colspan="7">Start typing to search students.</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -222,7 +223,7 @@
         </div>
 
         <form id="student-form" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; margin-bottom:20px;">
-          <input type="text" id="studentIdNumber" placeholder="Student ID (e.g. SIS-2026-002)" required />
+          <p class="student-id-hint">Student ID is generated automatically when the student is added (SIS-YYYY-NNN).</p>
           <input type="text" id="studentFullName" placeholder="Full name" required />
           <input type="email" id="studentEmail" placeholder="Email (optional)" />
           <input type="text" id="studentParentName" placeholder="Parent / guardian name" />

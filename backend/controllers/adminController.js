@@ -4,7 +4,15 @@
 // having to run raw SQL to add new people to the system.
 
 const pool = require('../config/db');
+const crypto = require('crypto');
 const { hashPassword, validatePassword } = require('../security/passwords');
+const { generateStudentId } = require('../security/studentIds');
+
+function currentAcademicYear(date = new Date()) {
+  const year = date.getFullYear();
+  const startYear = date.getMonth() >= 8 ? year : year - 1;
+  return `${startYear}/${startYear + 1}`;
+}
 
 // ---------------------------------------------------------------
 // GET /api/admin/stats — quick numbers for the top of the admin dashboard
@@ -260,21 +268,90 @@ async function getStudentReports(req, res) {
   }
 }
 
+async function recordCashPayment(req, res) {
+  const amount = Number(req.body.amount);
+  if (!Number.isFinite(amount) || amount <= 0 || Math.abs(amount * 100 - Math.round(amount * 100)) > 1e-7) {
+    return res.status(400).json({ message: 'Enter a cash payment greater than zero with no more than two decimal places.' });
+  }
+
+  const client = await pool.connect();
+  let transactionStarted = false;
+
+  try {
+    await client.query('BEGIN');
+    transactionStarted = true;
+
+    const studentResult = await client.query(
+      `SELECT s.id, s.total_fees_due, s.amount_paid, c.name AS classroom_name,
+              (SELECT r.academic_year FROM reports r WHERE r.student_id = s.id
+               ORDER BY r.created_at DESC LIMIT 1) AS academic_year
+       FROM students s
+       LEFT JOIN classrooms c ON c.id = s.classroom_id
+       WHERE s.id = $1`,
+      [req.params.id]
+    );
+    if (!studentResult.rows.length) {
+      await client.query('ROLLBACK');
+      transactionStarted = false;
+      return res.status(404).json({ message: 'Student not found.' });
+    }
+
+    const student = studentResult.rows[0];
+    const year = student.academic_year || currentAcademicYear();
+    const reference = `CASH-${Date.now()}-${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
+    const paymentResult = await client.query(
+      `INSERT INTO payments
+        (student_id, amount, paystack_reference, status, payment_method, academic_year, classroom_name)
+       VALUES ($1, $2, $3, 'success', 'cash', $4, $5)
+       RETURNING id, amount, paystack_reference, status, payment_method, academic_year, classroom_name, paid_at`,
+      [req.params.id, amount, reference, year, student.classroom_name || null]
+    );
+    const updatedStudent = await client.query(
+      `UPDATE students SET amount_paid = COALESCE(amount_paid, 0) + $1
+       WHERE id = $2
+       RETURNING total_fees_due, amount_paid`,
+      [amount, req.params.id]
+    );
+
+    await client.query('COMMIT');
+    transactionStarted = false;
+
+    const amountDue = Number(updatedStudent.rows[0].total_fees_due || 0);
+    const amountPaid = Number(updatedStudent.rows[0].amount_paid || 0);
+    res.status(201).json({
+      message: `Cash payment of GHS ${amount.toFixed(2)} recorded.`,
+      payment: paymentResult.rows[0],
+      student: {
+        amount_due: amountDue,
+        amount_paid: amountPaid,
+        arrears: Math.max(0, amountDue - amountPaid),
+      },
+    });
+  } catch (error) {
+    if (transactionStarted) await client.query('ROLLBACK');
+    console.error('Record cash payment error:', error);
+    res.status(500).json({ message: 'Could not record cash payment.' });
+  } finally {
+    client.release();
+  }
+}
+
 async function createStudent(req, res) {
   try {
     const {
-      studentIdNumber, fullName, email, password,
+      fullName, email, password,
       dateOfBirth, gender, classroomId, totalFeesDue, photoUrl, parentName, parentEmail, parentPhone,
     } = req.body;
 
-    if (!studentIdNumber || !fullName || !password) {
-      return res.status(400).json({ message: 'Student ID, full name, and password are required.' });
+    if (!fullName || !password) {
+      return res.status(400).json({ message: 'Full name and password are required.' });
     }
 
     const passwordError = validatePassword(password);
     if (passwordError) return res.status(400).json({ message: passwordError });
 
     const passwordHash = await hashPassword(password);
+    const studentIdNumber = await generateStudentId(pool);
 
     const result = await pool.query(
       `INSERT INTO students
@@ -288,10 +365,10 @@ async function createStudent(req, res) {
       ]
     );
 
-    res.json(result.rows[0]);
+    res.status(201).json(result.rows[0]);
   } catch (error) {
     if (error.code === '23505') {
-      return res.status(400).json({ message: 'A student with that ID number or email already exists.' });
+      return res.status(400).json({ message: 'A student with that email already exists or the generated ID could not be reserved.' });
     }
     console.error('Create student error:', error);
     res.status(500).json({ message: 'Could not create student.' });
@@ -480,7 +557,7 @@ module.exports = {
   upsertSchoolFee,
   getClassrooms, createClassroom, deleteClassroom,
   getTeachers, createTeacher, updateTeacher, deleteTeacher,
-  getStudents, getStudentReports, createStudent, updateStudent, deleteStudent,
+  getStudents, getStudentReports, recordCashPayment, createStudent, updateStudent, deleteStudent,
   getAnnouncements, getPublicAnnouncements, createAnnouncement, updateAnnouncement, deleteAnnouncement,
   getSubjects, createSubject, updateSubject, deleteSubject,
 };

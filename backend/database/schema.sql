@@ -102,6 +102,11 @@ CREATE TABLE students (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS student_id_sequences (
+    year INTEGER PRIMARY KEY,
+    last_number INTEGER NOT NULL
+);
+
 ALTER TABLE teachers ADD COLUMN IF NOT EXISTS photo_url TEXT;
 ALTER TABLE students ADD COLUMN IF NOT EXISTS parent_name VARCHAR(100);
 ALTER TABLE students ADD COLUMN IF NOT EXISTS parent_email VARCHAR(100);
@@ -183,9 +188,16 @@ CREATE TABLE reports (
     headteacher_remark TEXT,                        -- head teacher's remark
     attendance VARCHAR(20),                         -- e.g. "58/60"
     promoted_to VARCHAR(50),                        -- next class the student is promoted to (optional)
+    classroom_name VARCHAR(100),
+    promotion_status VARCHAR(30),
+    attitude_values_competencies TEXT,
     created_at TIMESTAMP DEFAULT NOW(),             -- when the report was first created
     UNIQUE (student_id, academic_year, term)        -- prevents duplicate reports for same term
 );
+
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS classroom_name VARCHAR(100);
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS promotion_status VARCHAR(30);
+ALTER TABLE reports ADD COLUMN IF NOT EXISTS attitude_values_competencies TEXT;
 
 -- ------------------------------------------------------------
 -- REPORT_SCORES — each subject's marks for a given report
@@ -214,8 +226,15 @@ CREATE TABLE payments (
     amount NUMERIC(10,2) NOT NULL,                  -- amount paid (in GHS)
     paystack_reference VARCHAR(100) UNIQUE NOT NULL,-- Paystack's unique transaction reference
     status VARCHAR(20) DEFAULT 'pending',           -- pending / success / failed
+    payment_method VARCHAR(20) NOT NULL DEFAULT 'paystack',
+    academic_year VARCHAR(20),
+    classroom_name VARCHAR(100),
     paid_at TIMESTAMP DEFAULT NOW()                 -- when the payment was recorded
 );
+
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS academic_year VARCHAR(20);
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS classroom_name VARCHAR(100);
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS payment_method VARCHAR(20) NOT NULL DEFAULT 'paystack';
 
 -- ------------------------------------------------------------
 -- Seed a couple of default classrooms and subjects so the app has data to work with

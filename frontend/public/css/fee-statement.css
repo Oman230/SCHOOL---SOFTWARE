@@ -1,0 +1,178 @@
+:root {
+  color: #20263a;
+  font-family: 'Manrope', Arial, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --ink: #29235f;
+  --muted: #626b7c;
+  --line: #dce3e6;
+  --owing: #b42318;
+  --paid: #167044;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  min-width: 300px;
+  margin: 0;
+  background: #eef1f3;
+}
+
+.statement-page {
+  width: min(100%, 980px);
+  margin: 0 auto;
+  padding: 24px 20px 48px;
+}
+
+.statement-toolbar,
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.statement-toolbar {
+  justify-content: space-between;
+  margin-bottom: 14px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.statement-toolbar p { margin: 0; }
+.toolbar-actions { flex-wrap: wrap; }
+
+.action-button,
+#student-picker {
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid var(--ink);
+  border-radius: 4px;
+  background: var(--ink);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.action-button-light { background: #fff; color: var(--ink); }
+#student-picker { background: #fff; color: var(--ink); }
+
+.statement-sheet {
+  padding: clamp(22px, 5vw, 48px);
+  background: #fff;
+  box-shadow: 0 12px 38px rgba(28, 35, 55, 0.12);
+}
+
+.statement-sheet[hidden] { display: none; }
+
+.school-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(170px, auto);
+  align-items: center;
+  gap: 18px;
+  padding-bottom: 22px;
+  border-bottom: 3px solid var(--ink);
+}
+
+.school-mark {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.school-header h1,
+.school-header p,
+.document-title h2,
+.document-title p { margin: 0; }
+
+.school-header h1 { color: var(--ink); font-size: clamp(18px, 3vw, 24px); }
+.school-header p { margin-top: 4px; color: var(--muted); font-size: 11px; }
+.document-title { text-align: right; }
+.document-title span { color: var(--muted); font-size: 9px; font-weight: 800; text-transform: uppercase; }
+.document-title h2 { margin: 4px 0; color: var(--ink); font-size: 20px; }
+.document-title p { color: var(--muted); font-size: 10px; }
+
+.student-details,
+.account-section { margin-top: 24px; }
+
+.student-details h2,
+.account-section h2 {
+  margin: 0 0 10px;
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.student-details dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.student-details dl > div { min-width: 0; padding: 10px; background: #f5f7f7; }
+.student-details dt { margin-bottom: 3px; color: var(--muted); font-size: 9px; font-weight: 800; text-transform: uppercase; }
+.student-details dd { margin: 0; font-size: 11px; font-weight: 700; overflow-wrap: anywhere; }
+
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 11px; }
+th, td { padding: 10px 9px; border-bottom: 1px solid #e4e9e5; text-align: left; }
+th { background: #f2f4f3; color: #20263a; font-size: 9px; font-weight: 800; white-space: nowrap; }
+.amount { font-weight: 800; white-space: nowrap; }
+.amount.owing { color: var(--owing); }
+.amount.paid { color: var(--paid); }
+.amount.neutral { color: var(--muted); }
+
+.amount-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+}
+.amount-key span { display: inline-flex; align-items: center; gap: 6px; }
+.key-dot { width: 9px; height: 9px; border-radius: 50%; }
+.key-dot.owing { background: var(--owing); }
+.key-dot.paid { background: var(--paid); }
+.history-note { margin: 10px 0 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+.empty-history { color: var(--muted); text-align: center; }
+
+.signatories {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  margin-top: 58px;
+}
+.signatories > div { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.signature-line { width: 100%; max-width: 260px; margin-bottom: 8px; border-top: 1px solid #777; }
+.signatories strong { color: var(--ink); font-size: 11px; }
+.signatories small { margin-top: 3px; color: var(--muted); font-size: 9px; }
+
+@media (max-width: 640px) {
+  .statement-page { padding: 14px 10px 28px; }
+  .statement-toolbar { align-items: flex-start; flex-direction: column; }
+  .statement-sheet { padding: 18px 13px; }
+  .school-header { grid-template-columns: auto 1fr; gap: 12px; }
+  .document-title { grid-column: 1 / -1; text-align: left; }
+  .student-details dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .signatories { gap: 22px; }
+}
+
+@page { size: A4; margin: 14mm; }
+@media print {
+  body { min-width: 0; background: #fff; }
+  .statement-page { width: 100%; padding: 0; }
+  .statement-toolbar { display: none; }
+  .statement-sheet { padding: 0; box-shadow: none; }
+  .school-header, .student-details, .account-section, .signatories { break-inside: avoid; }
+  th { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .amount-key { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}

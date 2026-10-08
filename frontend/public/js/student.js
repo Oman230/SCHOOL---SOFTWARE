@@ -140,13 +140,12 @@ function generateStudentIdCard() {
 }
 
 // ---------------------- LOAD REPORTS ----------------------
-function getOverallGradeFromAverage(value) {
-  if (value >= 80) return 'A';
-  if (value >= 70) return 'B';
-  if (value >= 60) return 'C';
-  if (value >= 50) return 'D';
-  if (value >= 40) return 'E';
-  return 'F';
+function getProficiencyFromScore(value) {
+  if (value >= 80) return { level: 'L1', name: 'Highly Proficient / Advanced', remark: 'Excellent performance. Keep it up. Shows high understanding.' };
+  if (value >= 65) return { level: 'L2', name: 'Proficient', remark: 'Very good performance. Could achieve more with little effort.' };
+  if (value >= 50) return { level: 'L3', name: 'Approaching Proficiency', remark: 'Good effort shown. Needs improvement.' };
+  if (value >= 35) return { level: 'L4', name: 'Developing', remark: 'Developing interest. Requires intensive support.' };
+  return { level: 'L5-L6', name: 'Below Standard / Beginning', remark: 'Developing interest. Requires intensive support.' };
 }
 
 function getTrendMeta(currentAverage, previousAverage) {
@@ -187,16 +186,15 @@ async function viewReportDetails(reportId) {
     const totalScores = scores.map((score) => ({
       subject_name: score.subject_name || 'Subject',
       total: Number(score.total_score || 0),
-      grade: (score.grade || 'F').toUpperCase(),
     }));
 
     const bestSubject = totalScores.length
       ? totalScores.reduce((best, current) => (current.total > best.total ? current : best), totalScores[0])
-      : { subject_name: '—', total: 0, grade: 'F' };
+      : { subject_name: '—', total: 0 };
 
     const weakestSubject = totalScores.length
       ? totalScores.reduce((lowest, current) => (current.total < lowest.total ? current : lowest), totalScores[0])
-      : { subject_name: '—', total: 0, grade: 'F' };
+      : { subject_name: '—', total: 0 };
 
     const averageScore = totalScores.length
       ? totalScores.reduce((sum, item) => sum + item.total, 0) / totalScores.length
@@ -220,22 +218,20 @@ async function viewReportDetails(reportId) {
       trend = getTrendMeta(averageScore, previousAverage);
     }
 
-    const overallGrade = getOverallGradeFromAverage(averageScore);
-    const gradeClass = `grade-${overallGrade.toLowerCase()}`;
+    const overallProficiency = getProficiencyFromScore(averageScore);
 
     const scoresHtml = scores.length
       ? scores.map((score) => {
           const total = Number(score.total_score || 0);
-          const grade = (score.grade || 'F').toUpperCase();
-          const gradeClass = `grade-${grade.toLowerCase()}`;
+          const proficiency = getProficiencyFromScore(total);
           return `
             <tr>
               <td>${score.subject_name}</td>
-              <td><span class="score-badge">${Number(score.class_score).toFixed(2)}</span></td>
-              <td><span class="score-badge">${Number(score.exam_score).toFixed(2)}</span></td>
+              <td><span class="score-badge">${Number(score.class_score).toFixed(2)} / 50</span></td>
+              <td><span class="score-badge">${Number(score.exam_score).toFixed(2)} / 50</span></td>
               <td><span class="score-badge">${total.toFixed(2)}</span></td>
-              <td><span class="grade-badge ${gradeClass}">${grade}</span></td>
-              <td>${score.subject_remark || '-'}</td>
+              <td><span class="grade-badge">${proficiency.level} — ${proficiency.name}</span></td>
+              <td>${proficiency.remark}</td>
             </tr>`;
         }).join('')
       : '<tr><td colspan="6">No subject scores available for this report yet.</td></tr>';
@@ -253,9 +249,9 @@ async function viewReportDetails(reportId) {
           <small>${weakestSubject.total.toFixed(2)}%</small>
         </div>
         <div class="summary-box">
-          <span>Overall average</span>
+          <span>Overall proficiency</span>
           <strong>${averageScore.toFixed(2)}%</strong>
-          <small class="grade-badge ${gradeClass}">${overallGrade}</small>
+          <small class="grade-badge">${overallProficiency.level} — ${overallProficiency.name}</small>
         </div>
         <div class="summary-box">
           <span>Teacher</span>
@@ -285,18 +281,19 @@ async function viewReportDetails(reportId) {
       </div>
 
       <p style="margin:0 0 10px; color:var(--color-muted);"><strong>Class remark:</strong> ${report.class_teacher_remark || '-'}</p>
-      <p style="margin:0 0 18px; color:var(--color-muted);"><strong>Head teacher remark:</strong> ${report.headteacher_remark || '-'}</p>
+      <p style="margin:0 0 10px; color:var(--color-muted);"><strong>Attitude, values and core competencies:</strong> ${report.attitude_values_competencies || '-'}</p>
+      <p style="margin:0 0 18px; color:var(--color-muted);"><strong>Head teacher's promotion decision:</strong> ${report.promotion_status || report.headteacher_remark || '-'}${report.promoted_to ? ` — ${report.promoted_to}` : ''}</p>
 
       <div class="table-scroll">
         <table class="report-detail-table">
           <thead>
             <tr>
               <th>Subject</th>
-              <th>Class Score</th>
-              <th>Exam Score</th>
-              <th>Total</th>
-              <th>Grade</th>
-              <th>Remark</th>
+              <th>SBA / 50</th>
+              <th>End-of-Term Exam / 50</th>
+              <th>Final / 100</th>
+              <th>Proficiency Level</th>
+              <th>Teacher Remark</th>
             </tr>
           </thead>
           <tbody>${scoresHtml}</tbody>

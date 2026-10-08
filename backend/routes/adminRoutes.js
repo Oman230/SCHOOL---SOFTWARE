@@ -8,6 +8,7 @@ const admin = require('../controllers/adminController');
 const admission = require('../controllers/admissionController');
 const { sendParentNotice } = require('../controllers/emailController');
 const backup = require('../controllers/backupController');
+const feeStatements = require('../controllers/feeStatementController');
 
 // All routes below run verifyToken + requireAdmin first
 router.use(verifyToken, requireAdmin);
@@ -38,6 +39,8 @@ router.delete('/teachers/:id', admin.deleteTeacher);  // DELETE /api/admin/teach
 // Students
 router.get('/students', admin.getStudents);          // GET    /api/admin/students
 router.get('/students/:id/reports', admin.getStudentReports); // GET /api/admin/students/5/reports
+router.post('/students/:id/cash-payments', admin.recordCashPayment);
+router.get('/students/:id/fee-statement', feeStatements.getAdminStudentFeeStatement);
 router.post('/students', admin.createStudent);        // POST   /api/admin/students
 router.put('/students/:id', admin.updateStudent);     // PUT    /api/admin/students/5
 router.delete('/students/:id', admin.deleteStudent);  // DELETE /api/admin/students/5

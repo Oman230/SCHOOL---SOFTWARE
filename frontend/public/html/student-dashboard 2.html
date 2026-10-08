@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="/css/style.css?v=student-id-20260925" />
   <!-- Paystack's small inline-checkout script — lets us open the payment popup directly -->
 </head>
-<body>
+<body class="dashboard-page">
 
   <div class="dashboard">
     <aside class="sidebar">
@@ -144,6 +144,7 @@
           <input type="number" id="pay-amount" min="1" step="0.01" placeholder="e.g. 500.00" />
         </div>
         <button class="btn btn-accent" id="pay-fees-btn">Pay Fees with Paystack</button>
+        <a class="btn btn-outline" href="/fee-statement.html" target="_blank" rel="noopener">View / Print Fee Statement</a>
         <p id="payment-status" style="margin-top:12px; font-weight:700; color: var(--color-primary-strong);"></p>
       </div>
 

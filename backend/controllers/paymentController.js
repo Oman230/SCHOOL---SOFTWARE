@@ -18,9 +18,27 @@ const crypto = require('crypto');
 const PDFDocument = require('pdfkit');
 const pool = require('../config/db');
 const { sendEmailToRecipients } = require('./emailController');
+const { currentAcademicYear } = require('./feeStatementController');
 require('dotenv').config();
 
 const PAYSTACK_BASE_URL = 'https://api.paystack.co';
+
+async function getPaymentSchoolYear(studentId) {
+  const result = await pool.query(
+    `SELECT c.name AS classroom_name,
+            (SELECT r.academic_year FROM reports r WHERE r.student_id = s.id
+             ORDER BY r.created_at DESC LIMIT 1) AS academic_year
+     FROM students s
+     LEFT JOIN classrooms c ON c.id = s.classroom_id
+     WHERE s.id = $1`,
+    [studentId]
+  );
+  const context = result.rows[0];
+  return {
+    academicYear: context?.academic_year || currentAcademicYear(),
+    classroomName: context?.classroom_name || null,
+  };
+}
 
 function buildReceiptPdf(payment, student) {
   return new Promise((resolve, reject) => {
@@ -121,12 +139,13 @@ async function handlePaystackWebhook(req, res) {
       studentId = studentResult.rows[0].id;
     }
 
+    const schoolYear = await getPaymentSchoolYear(studentId);
     const inserted = await pool.query(
-      `INSERT INTO payments (student_id, amount, paystack_reference, status)
-       VALUES ($1, $2, $3, 'success')
+      `INSERT INTO payments (student_id, amount, paystack_reference, status, academic_year, classroom_name)
+       VALUES ($1, $2, $3, 'success', $4, $5)
        ON CONFLICT (paystack_reference) DO NOTHING
        RETURNING id`,
-      [studentId, amountPaidGhs, reference]
+      [studentId, amountPaidGhs, reference, schoolYear.academicYear, schoolYear.classroomName]
     );
 
     if (inserted.rowCount > 0) {
@@ -234,12 +253,13 @@ async function verifyPayment(req, res) {
       return res.status(403).json({ message: 'This payment does not belong to the logged-in student.' });
     }
 
+    const schoolYear = await getPaymentSchoolYear(studentId);
     const inserted = await pool.query(
-      `INSERT INTO payments (student_id, amount, paystack_reference, status)
-       VALUES ($1, $2, $3, 'success')
+      `INSERT INTO payments (student_id, amount, paystack_reference, status, academic_year, classroom_name)
+       VALUES ($1, $2, $3, 'success', $4, $5)
        ON CONFLICT (paystack_reference) DO NOTHING
        RETURNING id, amount, paystack_reference, status, paid_at`,
-      [studentId, amountPaidGhs, reference]
+      [studentId, amountPaidGhs, reference, schoolYear.academicYear, schoolYear.classroomName]
     );
     let payment = inserted.rows[0];
     if (inserted.rowCount > 0) {

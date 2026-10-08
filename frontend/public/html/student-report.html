@@ -24,7 +24,7 @@
           <img id="school-logo" src="/assets/logo.png" alt="Sunrise International School logo" />
           <div>
             <h1 id="school-name">Sunrise International School</h1>
-            <p>Student Academic Record</p>
+            <p>Proficiency-Based Student Record</p>
           </div>
         </div>
         <div class="report-title">
@@ -65,27 +65,31 @@
         <div class="table-scroll">
           <table>
             <thead>
-              <tr><th>Subject</th><th>Class Score</th><th>Exam Score</th><th>Total</th><th>Grade</th><th>Remark</th></tr>
+              <tr><th>Subject</th><th>SBA / 50</th><th>End-of-Term Exam / 50</th><th>Final / 100</th><th>Proficiency Level</th><th>Teacher Remark</th></tr>
             </thead>
             <tbody id="score-rows"></tbody>
           </table>
         </div>
       </section>
 
-      <section class="achievement-row" aria-label="Overall achievement">
-        <div><span>Overall Achievement</span><strong id="overall-grade">-</strong></div>
-        <div><span>Average Score</span><strong id="overall-average">-</strong></div>
+      <p class="assessment-formula">School-Based Assessment (SBA) 50% + End-of-Term Exam 50% = Final Score 100%</p>
+
+      <section class="achievement-row" aria-label="Overall proficiency">
+        <div><span>Overall Proficiency</span><strong id="overall-grade">-</strong></div>
+        <div><span>Average Final Score</span><strong id="overall-average">-</strong></div>
         <div><span>Subjects Recorded</span><strong id="subject-count">-</strong></div>
       </section>
 
-      <section class="remarks-grid" aria-label="Teacher remarks">
+      <section class="remarks-grid" aria-label="Remarks and promotion">
         <div class="remark-box"><h2>Class Teacher's Remark</h2><p id="class-remark">-</p></div>
-        <div class="remark-box"><h2>Head Teacher's Remark</h2><p id="head-remark">-</p></div>
+        <div class="remark-box"><h2>Attitude, Values and Core Competencies</h2><p id="attitude-values-competencies">-</p></div>
+        <div class="remark-box"><h2>Head Teacher's Promotion Decision</h2><p id="head-remark">-</p></div>
+        <div class="remark-box"><h2>Destination Classroom</h2><p id="promotion-destination">-</p></div>
       </section>
 
       <section class="grade-key" aria-label="Grade guide">
-        <h2>Achievement Guide</h2>
-        <p><span><strong>A</strong> Excellent</span><span><strong>B</strong> Very Good</span><span><strong>C</strong> Good</span><span><strong>D</strong> Credit</span><span><strong>E</strong> Pass</span><span><strong>F</strong> Needs Improvement</span></p>
+        <h2>Proficiency Levels</h2>
+        <p><span><strong>L1</strong> 80–100% Highly Proficient / Advanced</span><span><strong>L2</strong> 65–&lt;80% Proficient</span><span><strong>L3</strong> 50–&lt;65% Approaching Proficiency</span><span><strong>L4</strong> 35–&lt;50% Developing</span><span><strong>L5–L6</strong> 0–&lt;35% Below Standard / Beginning</span></p>
       </section>
 
       <footer class="report-footer">

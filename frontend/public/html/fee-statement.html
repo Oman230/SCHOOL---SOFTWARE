@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#29235f" />
+  <title>School Fee Statement</title>
+  <link rel="stylesheet" href="/css/fee-statement.css" />
+</head>
+<body>
+  <main class="statement-page">
+    <div class="statement-toolbar">
+      <p id="statement-status" role="status">Loading fee statement...</p>
+      <div class="toolbar-actions">
+        <label id="student-picker-label" for="student-picker" hidden>Student</label>
+        <select id="student-picker" hidden aria-label="Choose student">
+          <option value="">Choose a student</option>
+        </select>
+        <button class="action-button" type="button" id="print-statement">Print / Save PDF</button>
+        <button class="action-button action-button-light" type="button" onclick="window.close()">Close</button>
+      </div>
+    </div>
+
+    <article class="statement-sheet" id="statement-sheet" hidden>
+      <header class="school-header">
+        <div class="school-mark" aria-hidden="true">SIS</div>
+        <div>
+          <h1 id="school-name">School Name</h1>
+          <p id="school-address"></p>
+          <p id="school-contact"></p>
+        </div>
+        <div class="document-title">
+          <span>Official Account Record</span>
+          <h2>Fee Statement</h2>
+          <p>Printed <time id="statement-date"></time></p>
+        </div>
+      </header>
+
+      <section class="student-details" aria-labelledby="student-details-title">
+        <h2 id="student-details-title">Student details</h2>
+        <dl>
+          <div><dt>Student name</dt><dd id="student-name">-</dd></div>
+          <div><dt>Student ID</dt><dd id="student-id">-</dd></div>
+          <div><dt>Class</dt><dd id="student-class">-</dd></div>
+          <div><dt>Academic year</dt><dd id="academic-year">-</dd></div>
+          <div><dt>Parent / guardian</dt><dd id="parent-name">-</dd></div>
+          <div><dt>Contact</dt><dd id="parent-contact">-</dd></div>
+        </dl>
+      </section>
+
+      <section class="account-section" aria-labelledby="account-heading">
+        <h2 id="account-heading">Current fee account</h2>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Academic year</th><th>Fees owing</th><th>Fees paid</th><th>Arrears</th></tr></thead>
+            <tbody id="account-row"></tbody>
+          </table>
+        </div>
+        <p class="amount-key"><span><i class="key-dot owing"></i>Red amounts mean owing.</span><span><i class="key-dot paid"></i>Green amounts mean paid.</span></p>
+      </section>
+
+      <section class="account-section" aria-labelledby="history-heading">
+        <h2 id="history-heading">Recorded payment history</h2>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Date</th><th>Academic year</th><th>Class</th><th>Method</th><th>Reference</th><th>Fees paid (GHS)</th></tr></thead>
+            <tbody id="payment-history"></tbody>
+          </table>
+        </div>
+        <p id="history-note" class="history-note"></p>
+      </section>
+
+      <footer class="signatories">
+        <div><span class="signature-line"></span><strong>Administrator</strong><small>Authorized school representative</small></div>
+        <div><span class="signature-line"></span><strong id="finance-officer">Finance Officer</strong><small>Accounts and fee records</small></div>
+      </footer>
+    </article>
+  </main>
+  <script src="/js/fee-statement.js"></script>
+</body>
+</html>

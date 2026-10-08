@@ -532,7 +532,6 @@ document.getElementById('teacher-student-form').addEventListener('submit', async
   }
 
   const payload = {
-    studentIdNumber: document.getElementById('teacherStudentIdNumber').value.trim(),
     fullName: document.getElementById('teacherStudentName').value.trim(),
     email: document.getElementById('teacherStudentEmail').value.trim(),
     password: document.getElementById('teacherStudentPassword').value,
@@ -557,7 +556,7 @@ document.getElementById('teacher-student-form').addEventListener('submit', async
 
   event.target.reset();
   loadClassList();
-  alert('Student added to your class successfully.');
+  alert(`Student added to your class. Generated ID: ${data.student_id_number}`);
 });
 
 async function deleteStudentFromClass(studentId, studentName) {
@@ -585,6 +584,10 @@ async function startReport(studentId, studentName) {
   document.getElementById('report-student-label').textContent = `Filling report for: ${studentName}`;
   document.getElementById('report-form').style.display = 'block';
   document.getElementById('report-preview-link').hidden = true;
+  document.getElementById('promotedTo').value = '';
+  document.getElementById('promotionStatus').value = '';
+  document.getElementById('classTeacherRemark').value = '';
+  document.getElementById('attitudeValuesCompetencies').value = '';
 
   // Load the list of subjects once, then reuse it for every student
   if (!allSubjects.length) {
@@ -622,13 +625,24 @@ document.getElementById('report-form').addEventListener('submit', async (event) 
     examScore: Number(row.querySelector('.exam-score-input').value) || 0,
   }));
 
+  const promotionStatus = document.getElementById('promotionStatus').value;
+  const promotedTo = document.getElementById('promotedTo').value.trim();
+  if (promotionStatus === 'Promoted' && !promotedTo) {
+    statusText.textContent = 'Choose the destination classroom for a promoted student.';
+    statusText.style.color = 'var(--color-danger)';
+    document.getElementById('promotedTo').focus();
+    return;
+  }
+
   const payload = {
     studentId: Number(document.getElementById('report-student-id').value),
     academicYear: document.getElementById('academicYear').value,
     term: document.getElementById('term').value,
     attendance: document.getElementById('attendance').value,
+    promotedTo,
+    promotionStatus,
     classTeacherRemark: document.getElementById('classTeacherRemark').value,
-    headteacherRemark: document.getElementById('headteacherRemark').value,
+    attitudeValuesCompetencies: document.getElementById('attitudeValuesCompetencies').value,
     scores,
   };
 
@@ -640,7 +654,7 @@ document.getElementById('report-form').addEventListener('submit', async (event) 
     return;
   }
 
-  statusText.textContent = 'Report saved successfully!';
+  statusText.textContent = data.message || 'Report saved successfully!';
   statusText.style.color = 'var(--color-success)';
   const previewLink = document.getElementById('report-preview-link');
   previewLink.href = `/student-report.html?id=${encodeURIComponent(data.reportId)}`;
