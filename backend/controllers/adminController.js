@@ -380,7 +380,7 @@ async function updateStudent(req, res) {
     const { fullName, classroomId, totalFeesDue, gender, dateOfBirth, photoUrl } = req.body;
     await pool.query(
       `UPDATE students
-       SET full_name = $1, classroom_id = $2, total_fees_due = $3, gender = $4, date_of_birth = $5, photo_url = $6
+       SET full_name = $1, classroom_id = $2, total_fees_due = $3, gender = $4, date_of_birth = $5, photo_url = COALESCE($6, photo_url)
        WHERE id = $7`,
       [fullName, classroomId || null, totalFeesDue, gender || null, dateOfBirth || null, photoUrl || null, req.params.id]
     );

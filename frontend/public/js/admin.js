@@ -684,18 +684,25 @@ async function loadStudents() {
     const trendMarkup = await getStudentTrend(s.id);
 
     if (studentEditId === s.id) {
+      const totalFeesDue = Number(s.total_fees_due || 0);
+      const amountPaid = Number(s.amount_paid || 0);
       return `
         <tr class="inline-edit-row">
           <td>${escapeHtml(s.student_id_number)}</td>
           <td><input class="inline-edit-input" type="text" value="${escapeHtml(s.full_name)}" data-field="fullName" /></td>
           <td>${getClassroomSelectHtml(s.classroom_name || '')}</td>
-          <td><input class="inline-edit-input" type="number" min="0" step="0.01" value="${Number(s.total_fees_due || 0).toFixed(2)}" data-field="feesDue" /></td>
-          <td>${Number(s.amount_paid).toFixed(2)}</td>
+          <td data-fees-assessed="${totalFeesDue}">${Math.max(0, totalFeesDue - amountPaid).toFixed(2)}</td>
+          <td>
+            <div class="inline-paid-entry">
+              <span>Paid to date: GHS ${amountPaid.toFixed(2)}</span>
+              <input class="inline-edit-input" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="New payment (GHS)" aria-label="New payment amount for ${escapeHtml(s.full_name)}" data-field="paymentAmount" />
+            </div>
+          </td>
           <td>${trendMarkup}</td>
           <td>
             <div class="inline-edit-actions">
               <button class="btn btn-primary" type="button" data-action="save-student" data-id="${s.id}">Save</button>
-              <button class="btn btn-outline" type="button" data-action="cancel-student" data-id="${s.id}" style="margin-left:8px;">Cancel</button>
+              <button class="btn btn-outline" type="button" data-action="cancel-student" data-id="${s.id}">Cancel</button>
             </div>
           </td>
         </tr>`;
@@ -706,8 +713,8 @@ async function loadStudents() {
         <td>${escapeHtml(s.student_id_number)}</td>
         <td>${escapeHtml(s.full_name)}</td>
         <td>${escapeHtml(s.classroom_name || '-')}</td>
-        <td>${Number(s.total_fees_due).toFixed(2)}</td>
-        <td>${Number(s.amount_paid).toFixed(2)}</td>
+        <td>${Math.max(0, Number(s.total_fees_due || 0) - Number(s.amount_paid || 0)).toFixed(2)}</td>
+        <td>${Number(s.amount_paid || 0).toFixed(2)}</td>
         <td>${trendMarkup}</td>
         <td>
           <button class="btn btn-outline" type="button" style="padding:5px 10px;font-size:0.8rem;color:var(--color-primary);border-color:rgba(79,70,229,0.2);" data-action="edit-student" data-id="${s.id}">Edit</button>
@@ -754,15 +761,17 @@ document.getElementById('students-table-body').addEventListener('click', async (
     const row = target.closest('tr');
     const fullName = row.querySelector('[data-field="fullName"]').value.trim();
     const classroomName = row.querySelector('[data-role="classroom"]').value;
-    const feesDue = Number(row.querySelector('[data-field="feesDue"]').value);
+    const feesDue = Number(row.querySelector('[data-fees-assessed]').dataset.feesAssessed);
+    const paymentAmountInput = row.querySelector('[data-field="paymentAmount"]');
+    const paymentAmount = paymentAmountInput.value.trim() === '' ? 0 : Number(paymentAmountInput.value);
     const gender = row.querySelector('[data-field="gender"]') ? row.querySelector('[data-field="gender"]').value : null;
 
     if (!fullName) {
       return alert('Student name cannot be empty.');
     }
 
-    if (Number.isNaN(feesDue)) {
-      return alert('Please enter a valid fees amount.');
+    if (!Number.isFinite(paymentAmount) || paymentAmount < 0 || Math.abs(paymentAmount * 100 - Math.round(paymentAmount * 100)) > 1e-7) {
+      return alert('Enter a valid payment amount with no more than two decimal places.');
     }
 
     const classroomId = classroomName ? resolveClassroomIdByName(classroomName) : null;
@@ -780,6 +789,13 @@ document.getElementById('students-table-body').addEventListener('click', async (
     });
 
     if (!ok) return alert(data.message);
+
+    if (paymentAmount > 0) {
+      const paymentResult = await apiSend('POST', `/api/admin/students/${studentId}/cash-payments`, { amount: paymentAmount });
+      if (!paymentResult.ok) return alert(paymentResult.data.message || 'Student details were saved, but the payment could not be recorded.');
+      alert(paymentResult.data.message);
+    }
+
     studentEditId = null;
     loadStudents();
   }
@@ -1003,8 +1019,8 @@ async function searchStudents(query) {
         <td>${escapeHtml(student.student_id_number)}</td>
         <td>${escapeHtml(student.full_name)}</td>
         <td>${escapeHtml(student.classroom_name || '-')}</td>
-        <td>${Number(student.total_fees_due).toFixed(2)}</td>
-        <td>${Number(student.amount_paid).toFixed(2)}</td>
+        <td>${Math.max(0, Number(student.total_fees_due || 0) - Number(student.amount_paid || 0)).toFixed(2)}</td>
+        <td>${Number(student.amount_paid || 0).toFixed(2)}</td>
         <td>${trendMarkup}</td>
         <td>
           <div class="cash-payment-entry">
